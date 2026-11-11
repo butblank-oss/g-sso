@@ -152,7 +152,7 @@ h2.t{font-size:25px;line-height:1.38;font-weight:700;letter-spacing:-.02em;margi
 .perm b{display:block;font-size:16.5px;margin-bottom:3px}
 .perm span{font-size:14px;color:var(--text-2);line-height:1.5}
 .switch{margin-left:auto;appearance:none;-webkit-appearance:none;width:52px;height:30px;border-radius:15px;background:#C9D5CE;position:relative;cursor:pointer;flex:none;transition:background .2s}
-.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.18);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.18);transition:transform .28s cubic-bezier(.34,1.2,.64,1)}
 .switch:checked{background:var(--mint-500)}
 .switch:checked::after{transform:translateX(22px)}
 .switch:focus-visible{outline:3px solid rgba(91,190,151,.5);outline-offset:2px}
@@ -216,11 +216,11 @@ canvas.confetti{position:absolute;inset:0;pointer-events:none;width:100%;height:
 .alldone img{width:120px;height:120px;object-fit:contain}
 .alldone h4{font-size:19px;margin:6px 0 4px}
 .alldone p{font-size:15px;color:var(--text-2);margin:0 0 14px;line-height:1.55}
-.badge{display:flex;align-items:center;gap:10px;background:#fff;border-radius:14px;padding:10px 14px;margin-bottom:14px;animation:badge .6s .25s cubic-bezier(.34,1.56,.64,1) both}
+.badge{display:flex;align-items:center;gap:10px;background:#fff;border-radius:14px;padding:10px 14px;margin-bottom:14px;animation:badge .5s .25s cubic-bezier(.34,1.25,.64,1) both}
 .badge .medal{width:36px;height:36px;border-radius:50%;background:var(--green-900);color:#fff;display:grid;place-items:center;font-weight:800;font-size:15px}
 .badge b{font-size:15px}
 .badge small{display:block;font-size:13px;color:var(--text-4)}
-@keyframes badge{from{opacity:.001;transform:scale(.6)}to{opacity:1;transform:none}}
+@keyframes badge{from{opacity:.001;transform:scale(.85)}to{opacity:1;transform:none}}
 .alldone .cta{height:50px;font-size:16.5px}
 
 /* 하단 탭바 */
@@ -231,15 +231,16 @@ canvas.confetti{position:absolute;inset:0;pointer-events:none;width:100%;height:
 .tabbar button:focus-visible{outline:2px solid var(--green-700);outline-offset:-4px}
 
 /* 바텀시트 */
-.dim{position:absolute;inset:0;background:rgba(20,40,32,.32);opacity:0;pointer-events:none;transition:opacity .25s;z-index:20}
-.sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;background:#fff;border-radius:26px 26px 0 0;padding:12px 22px 26px;transform:translateY(105%);transition:transform .42s cubic-bezier(.32,1.15,.5,1)}
+.dim{position:absolute;inset:0;background:rgba(20,40,32,.32);opacity:0;pointer-events:none;transition:opacity .24s cubic-bezier(.4,0,1,1);z-index:20}
+/* 바텀시트: 들어올 때 감속(오버슈트 없음) 0.38s, 나갈 때 가속 0.24s. 닫힌 동안은 visibility:hidden이라 포커스·탭 이동이 안 들어가요 */
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;background:#fff;border-radius:26px 26px 0 0;padding:12px 22px 26px;box-shadow:0 -10px 30px rgba(20,40,32,.10);transform:translate3d(0,100%,0);visibility:hidden;will-change:transform;transition:transform .24s cubic-bezier(.4,0,1,1),visibility 0s linear .24s}
 .sheet .grab{width:42px;height:5px;border-radius:3px;background:var(--border);margin:0 auto 14px}
 .sheet h3{font-size:21px;margin:0 0 6px}
 .sheet p{font-size:15.5px;line-height:1.65;color:var(--text-2);margin:0 0 18px}
 .sheet .sheet-head{display:flex;gap:14px;align-items:center;margin-bottom:10px}
 .sheet .sheet-head img{width:72px;height:72px;object-fit:contain;background:var(--mint-50);border-radius:18px}
-.sheet-open .dim{opacity:1;pointer-events:auto}
-.sheet-open .sheet{transform:none}
+.sheet-open .dim{opacity:1;pointer-events:auto;transition:opacity .38s cubic-bezier(.32,.72,0,1)}
+.sheet-open .sheet{transform:translate3d(0,0,0);visibility:visible;transition:transform .38s cubic-bezier(.32,.72,0,1),visibility 0s}
 
 .toast{position:absolute;left:50%;bottom:90px;z-index:40;transform:translate(-50%,16px);background:rgba(20,56,44,.92);color:#fff;font-size:15px;padding:12px 18px;border-radius:14px;opacity:0;transition:all .3s var(--ease-out);white-space:nowrap;pointer-events:none}
 .toast.show{opacity:1;transform:translate(-50%,0)}
@@ -427,8 +428,22 @@ function runCta(btn,ok,onOk,onErr,busy){
     else{btn.classList.add('error');btn.textContent='다시 확인해 주세요';onErr&&onErr();setTimeout(()=>{btn.classList.remove('error');btn.textContent=label;},1300);}
   },900);
 }
-function openSheet(html,focusSel){$('#sheetBody').innerHTML=html;phone.classList.add('sheet-open');setTimeout(()=>{const f=$('#sheetBody '+(focusSel||'button'));f&&f.focus();},60);}
-function closeSheet(){phone.classList.remove('sheet-open');}
+/* 포커스는 시트가 다 올라온 뒤, 스크롤 없이 준다. 화면 밖 요소에 focus()를 주면 브라우저가 폰 화면을 끌어올려서 '꿀렁'이 생겨요 */
+let sheetOpener=null,sheetTimer=0;
+function openSheet(html,focusSel){
+  sheetOpener=document.activeElement;
+  $('#sheetBody').innerHTML=html;phone.classList.add('sheet-open');
+  clearTimeout(sheetTimer);
+  sheetTimer=setTimeout(()=>{const f=$('#sheetBody '+(focusSel||'button'));f&&f.focus({preventScroll:true});},380);
+}
+function closeSheet(){
+  if(!phone.classList.contains('sheet-open'))return;
+  clearTimeout(sheetTimer);phone.classList.remove('sheet-open');
+  if(sheetOpener&&document.contains(sheetOpener))sheetOpener.focus({preventScroll:true});
+  sheetOpener=null;
+}
+/* 폰 프레임과 각 화면은 스스로 스크롤되면 안 돼요: 혹시 밀려도 바로 원위치 */
+[phone,...document.querySelectorAll('.view')].forEach(el=>el.addEventListener('scroll',()=>{if(el.scrollTop)el.scrollTop=0;}));
 $('#dim').onclick=closeSheet;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();});
 
@@ -531,7 +546,7 @@ function renderHome(first){
       <p class="hello">${name}님, 오늘도<br>반가워요</p>
       <div class="summary">
         <div class="ring" role="img" aria-label="오늘 훈련 ${doneN}/${ms.length} 완료">
-          <svg viewBox="0 0 84 84"><circle class="track" cx="42" cy="42" r="36" fill="none" stroke-width="9"/><circle class="bar" id="ringBar" cx="42" cy="42" r="36" fill="none" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg>
+          <svg viewBox="0 0 84 84"><circle class="track" cx="42" cy="42" r="36" fill="none" stroke-width="9"/><circle class="bar" id="ringBar" cx="42" cy="42" r="36" fill="none" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-(state.lastPct||0)/100)}"/></svg>
           <b id="ringNum">0%</b>
         </div>
         <div><p class="big">${all?'오늘 훈련을 모두 마쳤어요':`${ms.length}개 중 ${doneN}개 했어요`}</p><p class="small">${all?'내일 아침에 새 훈련이 열려요':`남은 시간 약 ${ms.filter(m=>!m.done).reduce((a,m)=>a+m.min,0)}분`}</p></div>

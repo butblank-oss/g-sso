@@ -87,7 +87,7 @@
 - 이모지 장식과 em 대시는 쓰지 않아요.
 
 **토큰 이름은 유지**
-- 코드(웹 CSS, React Native, Flutter, SwiftUI, Compose)와 피그마 변수가 이미 이 이름을 써요.
+- 코드(웹 CSS, React Native, Flutter, SwiftUI, Compose)가 이미 이 이름을 써요.
 - 값은 바꿔도 되지만, 이름을 바꾸거나 없애려면 표로 따로 적어 주세요.
 
 ## 4. 토큰 이름 목록 (값은 바꿔도 되고 이름은 유지)
@@ -125,10 +125,9 @@
 
 | 자료 | 위치 |
 |---|---|
-| 지금 디자인 시스템 (형식 페이지) | https://claude.ai/artifact/89sTp8bxjNk8L2iV23wauy |
+| 지금 디자인 시스템 (Claude 디자인 시스템 목록에 등록됨) | https://claude.ai/artifact/89sTp8bxjNk8L2iV23wauy |
 | 지금 디자인 시스템 가이드 페이지 | https://claude.ai/artifact/TdYxT47xUQBpoQocGUn46a |
 | 토큰·컴포넌트 코드, 에셋 원본 | GitHub `butblank-oss/g-sso` › `design-system/mally/` (tokens.json, tokens.css, components/, assets/) |
-| 피그마 변수 | https://www.figma.com/design/PmHLBb5HbHLNoa9nbZYrAr (Color 라이트·다크, Dimension, Typography, Motion) |
 | 캐릭터·게임 썸네일 원본 | 피그마 "맬리 그래픽 에셋 모음": 헬씨들 https://www.figma.com/design/gayjnv8NZzyhO9zq7G33nx?node-id=1812-4134 · 게임 썸네일 https://www.figma.com/design/gayjnv8NZzyhO9zq7G33nx?node-id=1804-20475 |
 | 브랜드 덱(색·로고·맬랑이 원본) | 맬리 사업소개 덱 https://claude.ai/artifact/NYGVU3CTB91khs1b7LTwnq |
 | 좋다고 한 화면 방향 | 4기 개편 프로토타입 https://butblank-oss.github.io/meli.brain/proto-4th/ · 상하단 바 적용판 https://claude.ai/artifact/MNzxjFYk74tqV5Zu7Zi7RU |
@@ -137,7 +136,7 @@
 
 1. 다시 디자인한 디자인 시스템(색·글자·간격·컴포넌트·아이콘·캐릭터 규칙). 라이트·다크 모두 포함해 주세요.
 2. 대표 화면 6장으로 시스템이 실제로 어떻게 보이는지 보여주세요. 오늘(홈), 기록(성과), 두뇌활동(게임 목록), 내 정보, 운동 플로우 1장, 관리자 대시보드예요.
-3. 바뀐 토큰 값 표와, 이름을 바꾸거나 없앤 것이 있다면 그 표도 주세요. 코드와 피그마 변수에 다시 반영할 거예요.
+3. 바뀐 토큰 값 표와, 이름을 바꾸거나 없앤 것이 있다면 그 표도 주세요. 코드에 다시 반영할 거예요.
 4. 확인이 필요한 것:
    - 게임 썸네일 "타일뒤집기"와 "기억의 숨바꼭질"이 피그마에서 같은 그림이에요.
    - 탭 이름이 둘로 나뉘어 있어요. 4기 개편안은 "오늘·성과·더 해보기·내 정보", 맬리 프로토타입은 "오늘·기록·두뇌활동·내정보"예요. 하나로 정해 주세요.
@@ -147,5 +146,4 @@
 Claude Design 결과가 나오면 Claude Code에서 "Claude Design 결과를 맬리 디자인 시스템에 반영해줘"라고 하면 돼요. 다음 순서로 반영해요.
 1. `design-system/mally/tokens.json`을 갱신해요.
 2. `scripts/build_platforms.py`로 앱 토큰 파일을 다시 만들어요.
-3. 피그마 변수를 갱신해요.
-4. 가이드 페이지와 지쏘 스킬(claude.ai용 zip 포함)을 갱신해요.
+3. 디자인 시스템 아티팩트, 가이드 페이지, 두 스킬(zip 포함)을 갱신해요.

@@ -65,7 +65,8 @@
 > AI에게: "버튼을 기본, 호버, 눌림, 비활성, 로딩, 성공, 오류 상태별로 다 만들어 줘"
 
 ## 5. 화면 이동 9가지 (내비게이션)
-하단 탭바 Tab bar · 상단 탭 Top tabs · 드로어 Navigation drawer · 브레드크럼 Breadcrumb · 고정 헤더 Sticky header · 플로팅 버튼 FAB · 페이지네이션 Pagination · 무한 스크롤 Infinite scroll · 뒤로 가기 Back navigation
+하단 탭바 Tab bar(화면 위에 떠 있는 캡슐형은 플로팅 탭바 Floating tab bar) · 상단 탭 Top tabs · 드로어 Navigation drawer · 브레드크럼 Breadcrumb · 고정 헤더 Sticky header · 플로팅 버튼 FAB · 페이지네이션 Pagination · 무한 스크롤 Infinite scroll · 뒤로 가기 Back navigation
+> 앱 바 종류: 큰 제목 Large title(스크롤하면 작은 제목으로 접힘 = 접히는 큰 제목 Collapsing large title) · 뒤로 가기형 · 닫기형(몰입 플로우).
 
 ## 6. 메뉴 아이콘 별명 9가지
 햄버거 Hamburger(≡) · 케밥 Kebab(⋮) · 미트볼 Meatballs(⋯) · 와플 Waffle(점 9개) · 벤토 Bento(네모 9개) · 도너 Döner(길이 다른 줄, 필터) · 베지 버거 Veggie burger(줄 2개) · 계단 Stairs(정렬) · 슬라이더 Sliders(설정/필터 조절)

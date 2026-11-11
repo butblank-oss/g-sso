@@ -1,6 +1,5 @@
-누르자마자 반영되는 켜고 끄기에 쓴다(알림, 위치 허용). 저장 버튼이 필요한 선택은 Checkbox.
+누르자마자 반영되는 켜고 끄기(알림, 위치). 저장 버튼이 필요한 선택은 Checkbox.
 
-- 꺼짐: `surface-sub` 트랙 + `border-control` 테두리와 썸. 켜짐: `primary` 트랙 + `on-primary` 썸. 색만이 아니라 썸 위치로도 상태가 보인다.
-- 썸 움직임만 `ease-spring-soft` 280ms(작은 튕김).
-- 한 줄 전체(설명 포함)를 label로 감싸 누르는 영역을 넓힌다.
-- 플랫폼: iOS는 둥근 스위치, 안드로이드는 Material 스위치 모양이 기본이지만 맬리는 같은 모양을 쓴다. 시스템 권한 팝업은 OS 것을 그대로 쓴다.
+- 꺼짐: `surface-sub` 트랙 + `border-control` 테두리·썸. 켜짐: `primary` 트랙 + `on-primary` 썸. 색과 썸 위치 둘 다로 상태를 보여준다.
+- 썸 움직임만 `ease-spring-soft`.
+- 설명까지 한 줄 전체(`m-setting`)를 label로 감싼다.

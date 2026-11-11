@@ -74,6 +74,10 @@ description: 지쏘(g-sso) 전용 UI/UX 스킬. 사용자가 화면·기능·컴
 - 모션 품질(꿀렁임 금지): `references/recipes.md`의 "모션 품질 규칙"을 지킨다.
 - 플랫폼: OS와 만나는 화면은 `references/platform-ios-android.md`의 QA 체크를 iOS와 안드로이드에서 따로 확인한다.
 
+## 디자인 시스템
+맬리 화면을 만들 때는 `design-system/mally/`를 먼저 읽는다: `README.md`(규칙) → `tokens.css`(값) → `components/<이름>/README.md`(컴포넌트 규칙). 색·글자·간격은 토큰 이름으로만 쓰고 값을 새로 만들지 않는다. 글자는 Pretendard 하나로 통일한다. 라이트·다크 두 테마를 모두 확인한다.
+원본(눈으로 보는 디자인 시스템): https://claude.ai/artifact/89sTp8bxjNk8L2iV23wauy
+
 ## 참고 파일
 - `references/ui-dictionary.md`: 27개 레퍼런스의 UI 이름 사전 전체 (카테고리별)
 - `references/recipes.md`: 화면 유형별 추천 조합과 프롬프트, 모션 품질 규칙

@@ -1,0 +1,667 @@
+<title>맬리 가입과 오늘의 훈련</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: 데스크톱은 폰 프로토타입 + 오른쪽 '스킬 적용 노트', 폰 폭에서는 폰 화면만 꽉 차게.
+   Look: 맬리브레인 토큰 기반의 은은한 유리(거의 흰 배경 + 연한 민트 빛 + 반투명 흰 면). 단일 라이트 테마로 고정. */
+@font-face{font-family:"Pretendard";src:url("/_blob/cbe5474ddbc2b640ecb1262a5fb91da1") format("woff2-variations"),url("/_blob/cbe5474ddbc2b640ecb1262a5fb91da1") format("woff2");font-weight:45 920;font-display:swap}
+:root{
+  color-scheme:light;
+  --green-900:#265F4D; --green-950:#14382C; --green-700:#2E8A64; --green-600:#1FA971; --mint-500:#5BBE97;
+  --bg:#FBFCFA; --surface:#FFFFFF; --surface-sub:#F1F5F3; --surface-mint:#E8F5EE; --surface-mint-2:#F3FAF6;
+  --border:#DCE7E1; --border-control:#788F83;
+  --text:#1E2B26; --text-2:#3E4C46; --text-3:#55635D; --text-4:#6B7872; --text-accent:#257552;
+  --primary:#265F4D; --primary-hover:#2D6B57; --primary-pressed:#14382C; --on-primary:#FFFFFF; --focus-ring:#2E8A64;
+  --error:#B8483E; --error-bg:#FBEFED; --success:#1F7A55; --warning:#8A6400;
+  --disabled-bg:#E3EAE6; --disabled-text:#8C978F;
+  --scrim:rgba(20,40,32,.32); --toast-bg:rgba(20,56,44,.94); --on-toast:#FFFFFF;
+  --glass:rgba(255,255,255,.66); --glass-strong:rgba(255,255,255,.86); --glass-line:rgba(255,255,255,.9);
+  --shadow:0 18px 44px rgba(38,95,77,.12); --shadow-card:0 6px 16px rgba(38,95,77,.08); --shadow-sheet:0 -10px 30px rgba(20,40,32,.10);
+  --amb-1:#DDF2E6; --amb-2:#E6F4EC; --amb-3:#F0F7EF;
+  --ease-out:cubic-bezier(.22,1,.36,1);
+  --font:"Pretendard",-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+}
+/* 다크 테마: 디자인 시스템 토큰 그대로 */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F1714; --surface:#17221E; --surface-sub:#1D2A25; --surface-mint:#18342A; --surface-mint-2:#142B23;
+  --border:#2A3A33; --border-control:#5C7268;
+  --text:#E8F0EC; --text-2:#C3D0CA; --text-3:#A3B2AB; --text-4:#8FA099; --text-accent:#7FD0AE;
+  --primary:#5BBE97; --primary-hover:#6CC7A3; --primary-pressed:#7FD0AE; --on-primary:#0F2A20; --focus-ring:#7FD0AE;
+  --error:#F08A80; --error-bg:#3A1F1C; --success:#6FD3A3; --warning:#E8C15A;
+  --disabled-bg:#26332E; --disabled-text:#66756E;
+  --scrim:rgba(0,0,0,.56); --toast-bg:rgba(232,240,236,.96); --on-toast:#14382C;
+  --glass:rgba(23,34,30,.72); --glass-strong:rgba(23,34,30,.88); --glass-line:rgba(255,255,255,.08);
+  --shadow:0 18px 44px rgba(0,0,0,.5); --shadow-card:0 6px 16px rgba(0,0,0,.35); --shadow-sheet:0 -10px 30px rgba(0,0,0,.45);
+  --amb-1:#12261E; --amb-2:#10211B; --amb-3:#132019;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0F1714; --surface:#17221E; --surface-sub:#1D2A25; --surface-mint:#18342A; --surface-mint-2:#142B23;
+  --border:#2A3A33; --border-control:#5C7268;
+  --text:#E8F0EC; --text-2:#C3D0CA; --text-3:#A3B2AB; --text-4:#8FA099; --text-accent:#7FD0AE;
+  --primary:#5BBE97; --primary-hover:#6CC7A3; --primary-pressed:#7FD0AE; --on-primary:#0F2A20; --focus-ring:#7FD0AE;
+  --error:#F08A80; --error-bg:#3A1F1C; --success:#6FD3A3; --warning:#E8C15A;
+  --disabled-bg:#26332E; --disabled-text:#66756E;
+  --scrim:rgba(0,0,0,.56); --toast-bg:rgba(232,240,236,.96); --on-toast:#14382C;
+  --glass:rgba(23,34,30,.72); --glass-strong:rgba(23,34,30,.88); --glass-line:rgba(255,255,255,.08);
+  --shadow:0 18px 44px rgba(0,0,0,.5); --shadow-card:0 6px 16px rgba(0,0,0,.35); --shadow-sheet:0 -10px 30px rgba(0,0,0,.45);
+  --amb-1:#12261E; --amb-2:#10211B; --amb-3:#132019;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:100%;-webkit-font-smoothing:antialiased;word-break:keep-all}
+.ambient{position:fixed;inset:0;z-index:0;pointer-events:none;background:
+  radial-gradient(520px 420px at 12% 8%, var(--amb-1) 0%, transparent 70%),
+  radial-gradient(460px 400px at 92% 88%, var(--amb-2) 0%, transparent 70%),
+  radial-gradient(380px 300px at 70% 20%, var(--amb-3) 0%, transparent 70%), var(--bg)}
+.stage{position:relative;z-index:1;display:flex;gap:40px;justify-content:center;align-items:flex-start;padding-block:28px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* 오른쪽 패널 */
+.side{width:340px;flex:none;display:flex;flex-direction:column;gap:16px;padding-top:8px}
+.side h1{font-size:24px;line-height:1.35;margin:0;color:var(--text-accent);text-wrap:balance}
+.side .lede{font-size:15px;line-height:1.6;color:var(--text-2);margin:0}
+.jump{display:flex;gap:6px;background:var(--surface-sub);padding:4px;border-radius:14px}
+.jump button{flex:1;height:40px;border:0;border-radius:11px;background:transparent;font:inherit;font-size:14.5px;font-weight:600;color:var(--text-3);cursor:pointer}
+.jump button[aria-pressed="true"]{background:var(--surface);color:var(--text-accent);box-shadow:0 2px 6px rgba(38,95,77,.12)}
+.jump button:focus-visible{outline:2px solid var(--green-700);outline-offset:2px}
+.notes{background:var(--glass-strong);border:1px solid var(--border);border-radius:18px;padding:18px 18px 8px}
+.notes h2{font-size:13px;letter-spacing:.06em;color:var(--text-accent);margin:0 0 4px;font-weight:700}
+.notes .screen-name{font-size:17px;font-weight:700;margin:0 0 10px}
+.notes dl{margin:0}
+.notes .row{display:grid;grid-template-columns:52px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--border)}
+.notes dt{font-size:12.5px;font-weight:700;color:var(--text-accent);background:var(--surface-mint);border-radius:8px;height:24px;display:grid;place-items:center}
+.notes dd{margin:0;font-size:14px;line-height:1.55;color:var(--text-2)}
+.reset{align-self:flex-start;height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface);font:inherit;font-size:14px;color:var(--text-2);cursor:pointer}
+.reset:hover{background:var(--surface-sub)}
+.reset:focus-visible{outline:2px solid var(--green-700);outline-offset:2px}
+
+/* 폰 */
+.phone{width:390px;max-width:100%;height:800px;border-radius:40px;background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--shadow),inset 0 0 0 1px var(--glass-line);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);position:relative;overflow:hidden;display:flex;flex-direction:column;flex:none}
+.view{position:absolute;inset:0;display:flex;flex-direction:column;padding:20px 22px 24px}
+.view[hidden]{display:none!important}
+.topbar{display:flex;align-items:center;gap:8px;height:44px;flex:none}
+.back{width:44px;height:44px;margin-left:-8px;border:0;border-radius:14px;background:transparent;font-size:26px;line-height:1;cursor:pointer;color:var(--text)}
+.back:hover{background:var(--surface-sub)}
+.back:focus-visible{outline:3px solid var(--mint-500)}
+.steps{display:flex;gap:6px;margin-left:auto}
+.steps i{width:22px;height:6px;border-radius:3px;background:var(--border);transition:background .3s,width .3s var(--ease-out)}
+.steps i.on{background:var(--primary);width:30px}
+
+.screen{display:none;flex-direction:column;flex:1;min-height:0}
+.screen.active{display:flex;animation:push .38s var(--ease-out)}
+.screen.active.back-anim{animation:pop .38s var(--ease-out)}
+@keyframes push{from{opacity:.001;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:.001;transform:translateX(-26px)}to{opacity:1;transform:none}}
+.stagger>*{animation:up .45s var(--ease-out) both}
+.stagger>*:nth-child(2){animation-delay:.05s}.stagger>*:nth-child(3){animation-delay:.1s}.stagger>*:nth-child(4){animation-delay:.15s}.stagger>*:nth-child(5){animation-delay:.2s}
+@keyframes up{from{opacity:.001;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+h2.t{font-size:25px;line-height:1.38;font-weight:700;letter-spacing:-.02em;margin:6px 0 0;text-wrap:balance}
+.lead{color:var(--text-2);font-size:16px;line-height:1.6;margin:8px 0 22px}
+.spacer{flex:1}
+
+/* 시작 */
+.brand{height:30px;width:auto;margin:22px 0 8px;align-self:flex-start}
+.hero-mally{width:150px;height:150px;object-fit:contain;align-self:center;margin:6px 0 4px}
+.social{display:flex;flex-direction:column;gap:10px}
+.sbtn{height:54px;border-radius:14px;border:0;font:inherit;font-size:16.5px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;transition:transform .12s,filter .15s}
+.sbtn:hover{filter:brightness(.97)}
+.sbtn:active{transform:scale(.98)}
+.sbtn:focus-visible{outline:3px solid var(--mint-500);outline-offset:2px}
+.sbtn svg{width:20px;height:20px}
+.kakao{background:#FEE500;color:rgba(0,0,0,.85)}
+.naver{background:#03C75A;color:#fff}
+.google{background:var(--surface);color:#1f1f1f;border:1px solid #dadce0}
+.apple{background:#000;color:#fff}
+:root[data-theme="dark"] .apple{background:#fff;color:#000}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .apple{background:#fff;color:#000}}
+/* 안드로이드: 하단 탭 선택 표시를 알약 배경으로 */
+/* 안드로이드: 같은 캡슐 탭바, 유리 흐림만 약하게(성능) */
+.phone[data-platform="android"] .tabbar{backdrop-filter:blur(8px) saturate(140%);-webkit-backdrop-filter:blur(8px) saturate(140%)}
+.back svg{width:24px;height:24px}
+.divider{display:flex;align-items:center;gap:10px;color:var(--text-4);font-size:14px;margin:16px 0 4px}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--border)}
+
+/* 텍스트 필드 */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:15px;font-weight:600;margin-bottom:8px}
+.input{width:100%;height:54px;border-radius:14px;border:1.5px solid var(--border);background:var(--glass-strong);padding:0 16px;font:inherit;font-size:17px;color:var(--text);transition:border-color .15s,box-shadow .15s}
+.input::placeholder{color:var(--text-4)}
+.input:hover{border-color:var(--border-control)}
+.input:focus{outline:0;border-color:var(--focus-ring);box-shadow:0 0 0 4px rgba(91,190,151,.22)}
+.field.err .input{border-color:var(--error);background:var(--error-bg)}
+.field.err .input:focus{box-shadow:0 0 0 4px rgba(184,72,62,.14)}
+.field.ok .input{border-color:var(--mint-500)}
+.msg{font-size:14px;margin:7px 0 0;color:var(--text-4);line-height:1.45}
+.msg:empty{display:none}
+.field.err .msg{color:var(--error)}
+.pw-wrap{position:relative}
+.pw-wrap .input{padding-right:70px}
+.toggle-pw{position:absolute;right:8px;top:9px;height:36px;padding:0 12px;border:0;border-radius:10px;background:var(--surface-sub);font:inherit;font-size:14px;color:var(--text-2);cursor:pointer}
+.toggle-pw:focus-visible{outline:2px solid var(--green-700)}
+.meter{display:flex;gap:5px;margin-top:10px}
+.meter i{flex:1;height:6px;border-radius:3px;background:var(--border);transition:background .25s}
+.meter-label{font-size:14px;margin:6px 0 0;font-weight:600}
+.meter-label:empty{display:none}
+
+/* 버튼 상태 */
+.cta{height:58px;width:100%;border:0;border-radius:16px;font:inherit;font-size:18px;font-weight:700;color:var(--on-primary);background:var(--primary);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s,transform .12s;flex:none}
+.cta:hover{background:var(--primary-hover)}
+.cta:active{background:var(--primary-pressed);transform:scale(.985)}
+.cta:focus-visible{outline:3px solid var(--mint-500);outline-offset:3px}
+.cta:disabled{background:var(--disabled-bg);color:var(--disabled-text);cursor:not-allowed;transform:none}
+.cta.loading{pointer-events:none;background:var(--green-700)}
+.cta.success{background:var(--success);color:var(--on-primary)}
+.cta.error{background:var(--error);color:var(--surface);animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.spin{width:18px;height:18px;border:2.5px solid currentColor;border-right-color:transparent;border-radius:50%;animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.ghost{height:50px;width:100%;border:0;background:transparent;font:inherit;font-size:16.5px;font-weight:600;color:var(--text-accent);cursor:pointer;border-radius:14px}
+.ghost:hover{background:var(--surface-sub)}
+.ghost:focus-visible{outline:2px solid var(--green-700)}
+
+/* 약관 */
+.terms{background:var(--glass-strong);border:1px solid var(--border);border-radius:18px;padding:6px}
+.check{display:flex;align-items:center;gap:12px;padding:13px 10px;border-radius:12px;cursor:pointer;font-size:16px}
+.check:hover{background:var(--surface-mint-2)}
+.check input{appearance:none;-webkit-appearance:none;margin:0;width:24px;height:24px;border-radius:7px;border:1.8px solid var(--border-control);background:var(--surface);display:grid;place-items:center;cursor:pointer;flex:none;transition:background .15s,border-color .15s}
+.check input:checked{background:var(--primary);border-color:var(--text-accent)}
+.check input:checked::after{content:"";width:6px;height:11px;border:solid var(--on-primary);border-width:0 2.4px 2.4px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.check input:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px}
+.check.all{font-weight:700;font-size:17px;border-bottom:1px solid var(--border);border-radius:12px 12px 0 0;margin-bottom:4px}
+.tag{font-size:12.5px;font-weight:700;padding:2px 7px;border-radius:6px;margin-right:5px}
+.tag.req{background:var(--surface-mint);color:var(--text-accent)}
+.tag.opt{background:var(--surface-sub);color:var(--text-3)}
+.view-btn{margin-left:auto;font-size:14px;color:var(--text-4);text-decoration:underline;background:none;border:0;cursor:pointer;font-family:inherit;padding:6px}
+
+/* 프로필 */
+.avatar{width:112px;height:112px;border-radius:50%;margin:8px auto 22px;background:var(--surface-mint);display:grid;place-items:center;position:relative;border:3px solid var(--surface);box-shadow:0 6px 18px rgba(38,95,77,.12)}
+.avatar span{font-size:40px;font-weight:700;color:var(--text-accent)}
+.avatar button{position:absolute;right:-2px;bottom:2px;width:36px;height:36px;border-radius:50%;border:3px solid var(--surface);background:var(--primary);color:var(--on-primary);font-size:18px;line-height:1;cursor:pointer}
+.avatar button:focus-visible{outline:3px solid var(--mint-500)}
+.counter{float:right;color:var(--text-4);font-weight:500;font-variant-numeric:tabular-nums}
+
+/* 권한 */
+.perm-hero{width:120px;height:120px;object-fit:contain;align-self:center;margin:-6px 0 6px}
+.perm{display:flex;gap:14px;align-items:center;padding:16px;border-radius:18px;background:var(--glass-strong);border:1px solid var(--border);margin-bottom:12px;cursor:pointer}
+.perm .ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;flex:none;background:var(--surface-mint);color:var(--text-accent)}
+.perm .ic svg{width:24px;height:24px}
+.perm b{display:block;font-size:16.5px;margin-bottom:3px}
+.perm span{font-size:14px;color:var(--text-2);line-height:1.5}
+.switch{margin-left:auto;appearance:none;-webkit-appearance:none;width:52px;height:30px;border-radius:15px;background:var(--surface-sub);box-shadow:inset 0 0 0 1.5px var(--border-control);position:relative;cursor:pointer;flex:none;transition:background .2s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--border-control);box-shadow:0 2px 4px rgba(0,0,0,.18);transition:transform .28s cubic-bezier(.34,1.2,.64,1)}
+.switch:checked{background:var(--primary);box-shadow:none}
+.switch:checked::after{transform:translateX(22px);background:var(--on-primary)}
+.switch:focus-visible{outline:3px solid rgba(91,190,151,.5);outline-offset:2px}
+.note{font-size:14px;color:var(--text-4);text-align:center;margin:10px 0 0}
+
+/* 웰컴 */
+.welcome{text-align:center;align-items:center}
+.welcome-mally{width:190px;height:190px;object-fit:contain;margin:30px 0 8px}
+.next-card{margin:22px 0;padding:16px 18px;border-radius:18px;background:var(--surface-mint);text-align:left;width:100%}
+.next-card small{color:var(--text-accent);font-weight:700;font-size:13.5px}
+.next-card p{font-size:16.5px;font-weight:600;margin:4px 0 0;line-height:1.5}
+canvas.confetti{position:absolute;inset:0;pointer-events:none;width:100%;height:100%;z-index:30}
+
+/* ===== 오늘의 훈련 홈 ===== */
+.appbar{display:flex;align-items:center;height:48px;flex:none}
+.appbar img{height:24px;width:auto}
+.appbar .streak{margin-left:auto;font-size:14px;font-weight:700;color:var(--text-accent);background:var(--surface-mint);border-radius:999px;padding:7px 12px;font-variant-numeric:tabular-nums}
+.home-scroll{flex:1;overflow-y:auto;margin:0 -22px -24px;padding:4px 22px 112px;min-height:0}
+.date{font-size:14.5px;color:var(--text-4);margin:10px 0 0;font-weight:500}
+.hello{font-size:24px;font-weight:700;line-height:1.38;margin:4px 0 16px;letter-spacing:-.02em}
+.summary{display:flex;align-items:center;gap:16px;padding:18px;border-radius:22px;background:var(--glass-strong);border:1px solid var(--border);position:relative;overflow:hidden}
+.ring{width:84px;height:84px;flex:none;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .track{stroke:var(--surface-mint)}
+.ring .bar{stroke:var(--primary);transition:stroke-dashoffset .8s var(--ease-out)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:20px;font-variant-numeric:tabular-nums;color:var(--text-accent)}
+.summary p{margin:0}
+.summary .big{font-size:18px;font-weight:700;line-height:1.4}
+.summary .small{font-size:14.5px;color:var(--text-3);margin-top:4px;line-height:1.5}
+.summary .cheer{position:absolute;right:-6px;bottom:-10px;width:78px;height:78px;object-fit:contain;opacity:.95}
+.section-h{display:flex;align-items:baseline;justify-content:space-between;margin:24px 0 10px}
+.section-h h3{font-size:18px;margin:0}
+.section-h span{font-size:14px;color:var(--text-4);font-variant-numeric:tabular-nums}
+.missions{display:flex;flex-direction:column;gap:10px}
+.mission{display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px 14px 12px;border-radius:20px;background:var(--surface);border:1px solid var(--border);cursor:pointer;text-align:left;font:inherit;color:inherit;transition:transform .12s,box-shadow .2s,background .2s}
+.mission:hover{box-shadow:var(--shadow-card)}
+.mission:active{transform:scale(.985)}
+.mission:focus-visible{outline:3px solid var(--mint-500);outline-offset:2px}
+.mission img{width:62px;height:62px;object-fit:contain;flex:none;background:var(--surface-mint-2);border-radius:16px}
+.mission .body{flex:1;min-width:0}
+.chip{display:inline-block;font-size:12.5px;font-weight:700;color:var(--text-accent);background:var(--surface-mint);padding:2px 8px;border-radius:999px}
+.mission .name{display:block;font-size:17px;font-weight:700;margin:5px 0 2px}
+.mission .meta{display:block;font-size:14px;color:var(--text-4)}
+.mission .state{width:34px;height:34px;flex:none;border-radius:50%;border:2px solid var(--border);display:grid;place-items:center}
+.mission.done{background:var(--surface-mint-2);border-color:transparent}
+.mission.done .name{color:var(--text-3)}
+.mission.done .state{border-color:transparent}
+.mission .state svg{width:34px;height:34px}
+.mission .state svg circle{fill:var(--primary)}
+.mission .state svg path{stroke-dasharray:30;stroke-dashoffset:30}
+.mission.done .state svg path{animation:draw .45s .1s var(--ease-out) forwards}
+.mission.done.instant .state svg path{animation:none;stroke-dashoffset:0}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* 스켈레톤 */
+.sk{background:linear-gradient(90deg,#EEF3F0 25%,#F7FAF8 50%,#EEF3F0 75%);background-size:200% 100%;animation:sh 1.2s linear infinite;border-radius:12px}
+@keyframes sh{to{background-position:-200% 0}}
+
+/* 모두 완료 빈 화면 */
+.alldone{display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px 16px 18px;border-radius:22px;background:var(--surface-mint);animation:up .5s var(--ease-out) both}
+.alldone img{width:120px;height:120px;object-fit:contain}
+.alldone h4{font-size:19px;margin:6px 0 4px}
+.alldone p{font-size:15px;color:var(--text-2);margin:0 0 14px;line-height:1.55}
+.badge{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:14px;padding:10px 14px;margin-bottom:14px;animation:badge .5s .25s cubic-bezier(.34,1.25,.64,1) both}
+.badge .medal{width:36px;height:36px;border-radius:50%;background:var(--primary);color:var(--on-primary);display:grid;place-items:center;font-weight:800;font-size:15px}
+.badge b{font-size:15px}
+.badge small{display:block;font-size:13px;color:var(--text-4)}
+@keyframes badge{from{opacity:.001;transform:scale(.85)}to{opacity:1;transform:none}}
+.alldone .cta{height:50px;font-size:16.5px}
+
+/* 하단 탭바 */
+/* 하단 탭바: 화면 위에 떠 있는 캡슐(플로팅 탭바). 내용이 뒤로 비쳐 보이고, 선택한 탭만 알약 배경 + 채운 아이콘 */
+.tabbar{position:absolute;left:16px;right:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:15;height:68px;display:flex;padding:5px;border-radius:999px;background:var(--glass-strong);border:1px solid var(--glass-line);box-shadow:var(--shadow-card),inset 0 0 0 1px var(--border);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
+.tabbar button{flex:1;min-width:48px;border:0;background:none;border-radius:999px;font:inherit;font-size:13px;font-weight:600;color:var(--text-3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;transition:background .15s,color .15s,transform .15s}
+.tabbar button svg{width:26px;height:26px}
+.tabbar button:active{transform:scale(.96)}
+.tabbar button[aria-current="page"]{color:var(--text);background:var(--surface-sub)}
+.tabbar button[aria-current="page"] svg{color:var(--primary)}
+.tabbar button[aria-current="page"] .fill{fill:currentColor}
+.tabbar button:focus-visible{outline:3px solid var(--focus-ring);outline-offset:-3px}
+
+/* 바텀시트 */
+.dim{position:absolute;inset:0;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity .24s cubic-bezier(.4,0,1,1);z-index:20}
+/* 바텀시트: 들어올 때 감속(오버슈트 없음) 0.38s, 나갈 때 가속 0.24s. 닫힌 동안은 visibility:hidden이라 포커스·탭 이동이 안 들어가요 */
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;background:var(--surface);border-radius:26px 26px 0 0;padding:12px 22px 26px;box-shadow:var(--shadow-sheet);transform:translate3d(0,100%,0);visibility:hidden;will-change:transform;transition:transform .24s cubic-bezier(.4,0,1,1),visibility 0s linear .24s}
+.sheet .grab{width:42px;height:5px;border-radius:3px;background:var(--border);margin:0 auto 14px}
+.sheet h3{font-size:21px;margin:0 0 6px}
+.sheet p{font-size:15.5px;line-height:1.65;color:var(--text-2);margin:0 0 18px}
+.sheet .sheet-head{display:flex;gap:14px;align-items:center;margin-bottom:10px}
+.sheet .sheet-head img{width:72px;height:72px;object-fit:contain;background:var(--surface-mint-2);border-radius:18px}
+.sheet-open .dim{opacity:1;pointer-events:auto;transition:opacity .38s cubic-bezier(.32,.72,0,1)}
+.sheet-open .sheet{transform:translate3d(0,0,0);visibility:visible;transition:transform .38s cubic-bezier(.32,.72,0,1),visibility 0s}
+
+.toast{position:absolute;left:50%;bottom:100px;z-index:40;transform:translate(-50%,16px);background:var(--toast-bg);color:var(--on-toast);font-size:15px;padding:12px 18px;border-radius:14px;opacity:0;transition:all .3s var(--ease-out);white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.mission.done .state svg path{stroke-dashoffset:0}}
+@media (max-width:820px){.side{display:none}.stage{padding-block:16px}}
+@media (max-width:440px){.stage{padding:0}.phone{width:100%;height:100vh;height:100dvh;border-radius:0;border:0;box-shadow:none}}
+</style>
+
+<div class="ambient" aria-hidden="true"></div>
+<div class="stage">
+  <main class="phone" id="phone">
+
+    <!-- ===== 회원가입 흐름 ===== -->
+    <div class="view" id="signupView">
+      <div class="topbar">
+        <button class="back" id="back" aria-label="뒤로 가기" hidden>‹</button>
+        <div class="steps" id="steps" hidden aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      </div>
+
+      <section class="screen active" data-step="0">
+        <div class="stagger" style="display:flex;flex-direction:column">
+          <img class="brand logo" src="/_blob/3b725e923fe6aca1b1c6e69ecfd99b98" alt="맬리">
+          <h2 class="t">매일 조금씩,<br>두뇌 건강을 챙겨요</h2>
+          <img class="hero-mally" src="/_blob/6856ca21de88d761d59dc2db9e151434" alt="손 들고 인사하는 맬랑이">
+        </div>
+        <div class="spacer"></div>
+        <div class="social stagger">
+          <button class="sbtn kakao" data-social="카카오"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-1 3.6c-.1.3.3.6.6.4l4.2-2.8c.5.1 1 .1 1.5.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>카카오로 시작하기</button>
+          <button class="sbtn naver" data-social="네이버"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.6 12.6 8.1 2H2v20h6.4V11.4L15.9 22H22V2h-6.4z"/></svg>네이버로 시작하기</button>
+          <button class="sbtn google" data-social="Google"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.2H12v4.2h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.9 0-5.3-1.9-6.2-4.5H2.2v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.2a11 11 0 0 0 0 9.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.1-3.1A11 11 0 0 0 2.2 7.1l3.6 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>Google로 시작하기</button>
+          <button class="sbtn apple" data-social="Apple"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9 0 0-2.7-1-2.7-4.1zM13.9 5c.7-.9 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z"/></svg>Apple로 시작하기</button>
+        </div>
+        <div class="divider">또는</div>
+        <button class="ghost" id="toEmail">이메일로 가입하기</button>
+      </section>
+
+      <section class="screen" data-step="1">
+        <div class="stagger">
+          <h2 class="t">기본 정보를 알려주세요</h2>
+          <p class="lead" style="margin-bottom:18px">로그인과 계정 확인에 쓰여요.</p>
+          <div class="field" id="f-email">
+            <label for="email">이메일</label>
+            <input class="input" id="email" type="email" autocomplete="email" placeholder="example@mally.kr">
+            <p class="msg" aria-live="polite"></p>
+          </div>
+          <div class="field" id="f-pw">
+            <label for="pw">비밀번호</label>
+            <div class="pw-wrap">
+              <input class="input" id="pw" type="password" autocomplete="new-password" placeholder="8자 이상, 영문·숫자 포함">
+              <button class="toggle-pw" id="togglePw" type="button">보기</button>
+            </div>
+            <div class="meter" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <p class="meter-label" id="meterLabel" aria-live="polite"></p>
+            <p class="msg"></p>
+          </div>
+          <div class="field" id="f-birth">
+            <label for="birth">생년월일</label>
+            <input class="input" id="birth" type="date" min="1900-01-01">
+            <p class="msg">만 14세 이상만 가입할 수 있어요.</p>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <button class="cta" id="next1" disabled>다음</button>
+      </section>
+
+      <section class="screen" data-step="2">
+        <div class="stagger">
+          <h2 class="t">약관에 동의해 주세요</h2>
+          <p class="lead">필수 항목만 동의해도 가입할 수 있어요.</p>
+          <div class="terms">
+            <label class="check all"><input type="checkbox" id="all">전체 동의</label>
+            <label class="check"><input type="checkbox" class="term req" id="t1"><span><span class="tag req">필수</span>서비스 이용약관</span><button class="view-btn" type="button" data-title="서비스 이용약관">보기</button></label>
+            <label class="check"><input type="checkbox" class="term req" id="t2"><span><span class="tag req">필수</span>개인정보 수집·이용</span><button class="view-btn" type="button" data-title="개인정보 수집·이용">보기</button></label>
+            <label class="check"><input type="checkbox" class="term req" id="t3"><span><span class="tag req">필수</span>만 14세 이상이에요</span></label>
+            <label class="check"><input type="checkbox" class="term" id="t4"><span><span class="tag opt">선택</span>훈련 소식 받기</span><button class="view-btn" type="button" data-title="훈련 소식 받기">보기</button></label>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <button class="cta" id="next2" disabled>동의하고 계속하기</button>
+      </section>
+
+      <section class="screen" data-step="3">
+        <div class="stagger">
+          <h2 class="t">어떻게 불러드릴까요?</h2>
+          <p class="lead">나중에 언제든 바꿀 수 있어요.</p>
+          <div class="avatar"><span id="avatarText">맬</span><button type="button" id="pickColor" aria-label="프로필 색 바꾸기">+</button></div>
+          <div class="field" id="f-nick">
+            <label for="nick">이름 <span class="counter" id="nickCount">0/10</span></label>
+            <input class="input" id="nick" maxlength="10" placeholder="2~10자">
+            <p class="msg" aria-live="polite"></p>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <button class="cta" id="next3" disabled>다음</button>
+      </section>
+
+      <section class="screen" data-step="4">
+        <div class="stagger" style="display:flex;flex-direction:column">
+          <h2 class="t">훈련 시간을 놓치지 않게</h2>
+          <p class="lead">필요한 것만 켜 주세요. 꺼도 가입은 그대로 진행돼요.</p>
+          <img class="perm-hero" src="/_blob/ab4615375c3df75dae6b41d85b6b8d93" alt="일정을 확인하는 맬랑이">
+          <label class="perm"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg></div><div><b>알림</b><span>매일 정한 시간에 오늘의 훈련을 알려드려요</span></div><input type="checkbox" class="switch" id="permNoti" aria-label="알림 허용"></label>
+          <label class="perm"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div><div><b>위치</b><span>가까운 치매안심센터를 찾아드려요</span></div><input type="checkbox" class="switch" id="permLoc" aria-label="위치 허용"></label>
+        </div>
+        <div class="spacer"></div>
+        <button class="cta" id="next4">가입 완료하기</button>
+        <p class="note">설정에서 언제든 바꿀 수 있어요</p>
+      </section>
+
+      <section class="screen welcome" data-step="5">
+        <img class="welcome-mally" src="/_blob/993b6daa6fe26cca75b178987873ed63" alt="고깔 쓰고 축하하는 맬랑이">
+        <h2 class="t" id="welcomeTitle">환영해요!</h2>
+        <p class="lead" style="margin-bottom:0">가입이 끝났어요.</p>
+        <div class="next-card"><small>처음이라면 이것부터</small><p>오늘의 훈련 3가지를 해 보세요. 모두 합쳐 15분이면 충분해요.</p></div>
+        <div class="spacer"></div>
+        <button class="cta" id="toHome">오늘의 훈련 시작하기</button>
+      </section>
+    </div>
+
+    <!-- ===== 오늘의 훈련 홈 ===== -->
+    <div class="view" id="homeView" hidden>
+      <div class="appbar">
+        <img class="logo" src="/_blob/3b725e923fe6aca1b1c6e69ecfd99b98" alt="맬리">
+        <span class="streak" id="streak">연속 2일째</span>
+      </div>
+      <div class="home-scroll" id="homeScroll"></div>
+      <nav class="tabbar" aria-label="주요 메뉴">
+        <button aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="fill" d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>오늘</button>
+        <button data-soon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect class="fill" x="3.5" y="12" width="4.5" height="8.5" rx="1.5"/><rect class="fill" x="9.75" y="7" width="4.5" height="13.5" rx="1.5"/><rect class="fill" x="16" y="3.5" width="4.5" height="17" rx="1.5"/></svg>기록</button>
+        <button data-soon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect class="fill" x="3" y="3" width="7.5" height="7.5" rx="2"/><rect class="fill" x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect class="fill" x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M17.25 13.5v7.5M13.5 17.25H21"/></svg>두뇌활동</button>
+        <button data-soon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle class="fill" cx="12" cy="8" r="4"/><path class="fill" d="M4 21a8 8 0 0 1 16 0z"/></svg>내정보</button>
+      </nav>
+    </div>
+
+    <div class="dim" id="dim"></div>
+    <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div class="grab"></div>
+      <div id="sheetBody"></div>
+    </div>
+    <canvas class="confetti" id="confetti"></canvas>
+    <div class="toast" id="toast" role="status"></div>
+  </main>
+
+  <aside class="side">
+    <h1>지쏘 UI/UX 스킬 테스트</h1>
+    <p class="lede">맬리 회원가입부터 오늘의 훈련 홈까지 한 흐름으로 이어져요. 왼쪽 화면을 직접 눌러 보세요.</p>
+    <div class="jump" role="group" aria-label="화면 바로가기">
+      <button id="jumpSignup" aria-pressed="true">회원가입</button>
+      <button id="jumpHome" aria-pressed="false">오늘의 훈련 홈</button>
+    </div>
+    <div class="jump" role="group" aria-label="테마">
+      <button id="themeLight" aria-pressed="false">라이트</button>
+      <button id="themeDark" aria-pressed="false">다크</button>
+    </div>
+    <div class="jump" role="group" aria-label="플랫폼">
+      <button id="platIos" aria-pressed="true">iOS</button>
+      <button id="platAndroid" aria-pressed="false">안드로이드</button>
+    </div>
+    <div class="notes">
+      <h2>스킬이 적용한 것</h2>
+      <p class="screen-name" id="noteTitle"></p>
+      <dl id="noteList"></dl>
+    </div>
+    <button class="reset" id="reset">처음부터 다시</button>
+  </aside>
+</div>
+
+<script>
+const IMG={logo:"/_blob/3b725e923fe6aca1b1c6e69ecfd99b98",brain:"/_blob/ea8dc64b9eb425be4e68ba4fb8a3b566",move:"/_blob/638407d069802e86ec9c298b2c68b01f",mind:"/_blob/d6147c29a3a5c84baa5e72c9c1a57411",done:"/_blob/7af451d87649b33a5281034e028cae1f",cheer:"/_blob/0e53d796d1ac719a3209b51372cc46ba"};
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const phone=$('#phone');
+const state={step:0,history:[],nick:"",missions:null,streak:2};
+
+/* ---------- 스킬 적용 노트 ---------- */
+const NOTES={
+  0:["시작: 간편 로그인",[["기획","간편 로그인 4종을 위에 두고 이메일 가입은 아래 보조 버튼으로 뒀어요"],["디자인","맬랑이 인사 포즈로 첫인상을 만들고, 로그인 버튼은 각 서비스 공식 색을 지켰어요"],["프론트","간편 로그인은 정보 입력을 건너뛰고 약관으로 바로 가요"]]],
+  1:["정보 입력",[["기획","만 14세 미만은 막아요"],["디자인","라벨을 칸 위에 고정, 비밀번호 강도 표시기, 생년월일 데이트 피커"],["프론트","칸을 벗어날 때 인라인 에러가 떠요. test@test.com을 넣으면 '이미 가입된 이메일' 오류 상태를 볼 수 있어요"]]],
+  2:["약관 동의",[["기획","선택 항목은 체크 안 된 채로 시작해요 (미리 체크된 동의는 다크패턴)"],["디자인","약관 '보기'는 바텀시트로 열려요"],["프론트","전체 동의와 개별 동의가 연동되고, 필수 3개를 체크해야 버튼이 켜져요"]]],
+  3:["프로필 설정",[["기획","이름 하나만 받아요. 나머지는 나중에"],["디자인","글자 수 카운터, 프로필 색 바꾸기"],["프론트","2자 미만이면 인라인 에러, 버튼은 비활성"]]],
+  4:["권한 요청",[["기획","왜 필요한지 먼저 말하고, 꺼도 가입이 진행돼요. 거절을 미안하게 만드는 문구는 쓰지 않았어요"],["디자인","스위치는 누르자마자 반영되니 토글을 썼어요. 움직임은 스프링"],["프론트","가입 버튼: 로딩 → 성공 상태"]]],
+  5:["웰컴 화면",[["기획","다음 행동을 하나만 안내해요 (오늘의 훈련)"],["디자인","가입은 큰 일이라 축하도 크게: 축하 맬랑이 + 컨페티"],["프론트","동작 줄이기 설정이면 컨페티를 생략해요"]]],
+  home:["오늘의 훈련 홈",[["기획","하루 3개로 끝이 있는 목록이에요. 다 하면 '모두 완료' 화면으로 멈출 곳을 만들어요"],["기획","연속 기록은 사실만 보여주고, 가짜 마감 시계는 쓰지 않아요"],["디자인","진행률 원 + 미션 카드 + 칩, 상세는 바텀시트. 하단은 떠 있는 캡슐 탭바(오늘 · 기록 · 두뇌활동 · 내정보): 선택 탭만 알약 배경과 채운 아이콘"],["디자인","작은 일(미션 1개)은 체크 그리기, 큰 일(하루 완료)은 배지 획득"],["프론트","처음 열 때 스켈레톤, 완료하면 토스트 2초, 버튼은 로딩 → 성공"],["디자인 시스템","맬리 디자인 시스템 토큰 사용. 라이트·다크 모두 대비 기준 통과, 글자는 Pretendard 하나"],["플랫폼","안드로이드는 뒤로 가기 ← 아이콘. 탭바는 두 OS 같은 캡슐, 안드로이드는 유리 흐림만 약하게"]]]
+};
+function renderNotes(key){const [t,rows]=NOTES[key];$('#noteTitle').textContent=t;$('#noteList').innerHTML=rows.map(([k,v])=>`<div class="row"><dt>${k}</dt><dd>${v}</dd></div>`).join('');}
+
+/* ---------- 공통 ---------- */
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2000);}
+function runCta(btn,ok,onOk,onErr,busy){
+  const label=btn.textContent;btn.classList.add('loading');btn.innerHTML=`<span class="spin"></span>${busy||'확인 중'}`;
+  setTimeout(()=>{btn.classList.remove('loading');
+    if(ok()){btn.classList.add('success');btn.textContent='✓ 완료';setTimeout(()=>{btn.classList.remove('success');btn.textContent=label;onOk();},550);}
+    else{btn.classList.add('error');btn.textContent='다시 확인해 주세요';onErr&&onErr();setTimeout(()=>{btn.classList.remove('error');btn.textContent=label;},1300);}
+  },900);
+}
+/* 포커스는 시트가 다 올라온 뒤, 스크롤 없이 준다. 화면 밖 요소에 focus()를 주면 브라우저가 폰 화면을 끌어올려서 '꿀렁'이 생겨요 */
+let sheetOpener=null,sheetTimer=0;
+function openSheet(html,focusSel){
+  sheetOpener=document.activeElement;
+  $('#sheetBody').innerHTML=html;phone.classList.add('sheet-open');
+  clearTimeout(sheetTimer);
+  sheetTimer=setTimeout(()=>{const f=$('#sheetBody '+(focusSel||'button'));f&&f.focus({preventScroll:true});},380);
+}
+function closeSheet(){
+  if(!phone.classList.contains('sheet-open'))return;
+  clearTimeout(sheetTimer);phone.classList.remove('sheet-open');
+  if(sheetOpener&&document.contains(sheetOpener))sheetOpener.focus({preventScroll:true});
+  sheetOpener=null;
+}
+/* 폰 프레임과 각 화면은 스스로 스크롤되면 안 돼요: 혹시 밀려도 바로 원위치 */
+[phone,...document.querySelectorAll('.view')].forEach(el=>el.addEventListener('scroll',()=>{if(el.scrollTop)el.scrollTop=0;}));
+$('#dim').onclick=closeSheet;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();});
+
+/* ---------- 회원가입 ---------- */
+const screens=$$('#signupView .screen');
+function go(n,isBack=false){
+  if(!isBack) state.history.push(state.step);
+  state.step=n;
+  screens.forEach(s=>s.classList.remove('active','back-anim'));
+  const cur=screens.find(s=>+s.dataset.step===n);cur.classList.add('active');if(isBack)cur.classList.add('back-anim');
+  $('#back').hidden=n===0||n===5; $('#steps').hidden=n===0||n===5;
+  $$('#steps i').forEach((d,i)=>d.classList.toggle('on',i<n));
+  renderNotes(n);
+  if(n===5) confetti();
+}
+$('#back').onclick=()=>{if(state.history.length)go(state.history.pop(),true);};
+$$('[data-social]').forEach(b=>b.onclick=()=>{toast(`${b.dataset.social} 계정으로 연결했어요`);go(2);});
+$('#toEmail').onclick=()=>go(1);
+
+function setField(id,st,msg){const f=$(id);f.classList.toggle('err',st==='err');f.classList.toggle('ok',st==='ok');if(msg!==undefined)f.querySelector('.msg').textContent=msg;}
+const emailRe=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/; const touched={};
+function checkEmail(show){const v=$('#email').value.trim();const ok=emailRe.test(v);if(show||touched.email){touched.email=true;setField('#f-email',ok?'ok':'err',ok?'':(v?'이메일 형식을 확인해 주세요':'이메일을 입력해 주세요'));}return ok;}
+function strength(v){let s=0;if(v.length>=8)s++;if(/[A-Za-z]/.test(v)&&/\d/.test(v))s++;if(/[^A-Za-z0-9]/.test(v))s++;if(v.length>=12)s++;return s;}
+function checkPw(show){const v=$('#pw').value,s=strength(v),valid=v.length>=8&&/[A-Za-z]/.test(v)&&/\d/.test(v);
+  const colors=['#B8483E','#C98A1B','#5BBE97','#265F4D'],labels=['약해요','보통이에요','안전해요','아주 안전해요'];
+  $$('.meter i').forEach((b,i)=>b.style.background=i<s?colors[s-1]:'');
+  const ml=$('#meterLabel');ml.textContent=v?labels[Math.max(s,1)-1]:'';ml.style.color=v?colors[Math.max(s,1)-1]:'';
+  if(show||touched.pw){touched.pw=true;setField('#f-pw',valid?'ok':'err',valid?'':'8자 이상, 영문과 숫자를 모두 넣어 주세요');}
+  return valid;}
+function age(d){const b=new Date(d),t=new Date();let a=t.getFullYear()-b.getFullYear();if(t<new Date(t.getFullYear(),b.getMonth(),b.getDate()))a--;return a;}
+function checkBirth(show){const v=$('#birth').value,ok=!!v&&age(v)>=14&&age(v)<120;if(show||touched.birth){touched.birth=true;setField('#f-birth',ok?'ok':'err',ok?'':(v?'만 14세 이상만 가입할 수 있어요':'생년월일을 선택해 주세요'));}return ok;}
+$('#birth').max=new Date().toISOString().slice(0,10);
+function validate1(){$('#next1').disabled=!(emailRe.test($('#email').value.trim())&&checkPw(false)&&$('#birth').value);}
+$('#email').addEventListener('blur',()=>checkEmail(true));
+$('#email').addEventListener('input',()=>{if(touched.email)checkEmail();validate1();});
+$('#pw').addEventListener('input',()=>{checkPw();validate1();});
+$('#pw').addEventListener('blur',()=>{if($('#pw').value)checkPw(true);});
+$('#birth').addEventListener('change',()=>{checkBirth(true);validate1();});
+$('#togglePw').onclick=()=>{const p=$('#pw'),show=p.type==='password';p.type=show?'text':'password';$('#togglePw').textContent=show?'숨김':'보기';};
+$('#next1').onclick=e=>{
+  const a=checkEmail(true),b=checkPw(true),c=checkBirth(true);if(!(a&&b&&c)){validate1();return;}
+  runCta(e.currentTarget,()=>$('#email').value.trim().toLowerCase()!=='test@test.com',()=>go(2),()=>setField('#f-email','err','이미 가입된 이메일이에요. 로그인하거나 다른 이메일을 써 주세요'));
+};
+
+const terms=$$('.term'),reqs=$$('.term.req');
+function syncTerms(){$('#all').checked=terms.every(t=>t.checked);$('#next2').disabled=!reqs.every(t=>t.checked);}
+$('#all').onchange=e=>{terms.forEach(t=>t.checked=e.target.checked);syncTerms();};
+terms.forEach(t=>t.onchange=syncTerms);
+$('#next2').onclick=()=>go(3);
+$$('.view-btn').forEach(v=>v.onclick=e=>{e.preventDefault();e.stopPropagation();const target=v.closest('.check').querySelector('input');
+  openSheet(`<h3 id="sheetTitle">${v.dataset.title}</h3><p>프로토타입용 예시 문구예요. 실제 약관 본문이 이 자리에 들어가요. 본문은 스크롤되고, 아래 버튼으로 바로 동의할 수 있어요.</p><button class="cta" id="sheetAgree">동의하기</button>`,'#sheetAgree');
+  $('#sheetAgree').onclick=()=>{target.checked=true;syncTerms();closeSheet();};});
+
+const tones=[['#E8F5EE','#265F4D'],['#265F4D','#FFFFFF'],['#5BBE97','#14382C'],['#F1F5F3','#2E8A64']];let ti=0;
+$('#pickColor').onclick=()=>{ti=(ti+1)%tones.length;const a=$('.avatar');a.style.background=tones[ti][0];$('#avatarText').style.color=tones[ti][1];};
+$('#nick').addEventListener('input',e=>{const v=e.target.value.trim(),ok=v.length>=2;$('#nickCount').textContent=`${e.target.value.length}/10`;$('#avatarText').textContent=v?v[0]:'맬';
+  setField('#f-nick',v?(ok?'ok':'err'):'',v&&!ok?'2자 이상 입력해 주세요':'');$('#next3').disabled=!ok;});
+$('#next3').onclick=()=>{state.nick=$('#nick').value.trim();$('#welcomeTitle').textContent=`${state.nick}님, 환영해요!`;go(4);};
+$('#next4').onclick=e=>runCta(e.currentTarget,()=>true,()=>go(5),null,'가입하는 중');
+$('#toHome').onclick=()=>showHome(true);
+
+/* ---------- 컨페티 ---------- */
+let confettiTok=0;
+function confetti(){const tok=++confettiTok;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const c=$('#confetti'),ctx=c.getContext('2d'),r=c.getBoundingClientRect(),dpr=devicePixelRatio||1;
+  c.width=r.width*dpr;c.height=r.height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+  const cols=['#265F4D','#5BBE97','#BFE6D3','#FFE27A','#2E8A64'];
+  const ps=Array.from({length:110},()=>({x:r.width/2,y:r.height*.28,vx:(Math.random()-.5)*9,vy:-Math.random()*9-3,s:Math.random()*6+4,c:cols[Math.random()*cols.length|0],a:Math.random()*6,va:(Math.random()-.5)*.3}));
+  let t=0;(function f(){ctx.clearRect(0,0,r.width,r.height);ps.forEach(p=>{p.vy+=.22;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.a+=p.va;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.a);ctx.fillStyle=p.c;ctx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);ctx.restore();});if(++t<170&&tok===confettiTok)requestAnimationFrame(f);else ctx.clearRect(0,0,r.width,r.height);})();
+}
+
+/* ---------- 오늘의 훈련 홈 ---------- */
+const MISSIONS=[
+  {id:'brain',chip:'두뇌 게임',name:'같은 그림 짝 맞추기',min:5,img:'brain',alt:'책 읽는 맬랑이',desc:'뒤집힌 카드 12장 중 같은 그림 두 장을 찾아요. 기억력과 집중력을 함께 써요.'},
+  {id:'move',chip:'운동',name:'앉아서 하는 팔 운동',min:5,img:'move',alt:'아령 운동하는 맬랑이',desc:'의자에 앉아 영상을 따라 팔을 올렸다 내려요. 무리하지 않는 만큼만 해요.'},
+  {id:'mind',chip:'마음',name:'오늘 기분 한 줄 쓰기',min:3,img:'mind',alt:'손 모으고 미소 짓는 맬랑이',desc:'오늘 있었던 일이나 기분을 한 줄로 남겨요. 말로 해도 괜찮아요.'}
+];
+const DAYS=['일','월','화','수','목','금','토'];
+function todayLabel(){const d=new Date();return `${d.getMonth()+1}월 ${d.getDate()}일 ${DAYS[d.getDay()]}요일`;}
+const checkSvg='<svg viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="17"/><path d="M10 17.5l4.6 4.6L24 12.8" fill="none" stroke="var(--on-primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function showHome(fromSignup){
+  confettiTok++;$('#signupView').hidden=true;$('#homeView').hidden=false;closeSheet();
+  $('#jumpSignup').setAttribute('aria-pressed','false');$('#jumpHome').setAttribute('aria-pressed','true');
+  if(!state.missions) state.missions=MISSIONS.map(m=>({...m,done:false}));
+  renderNotes('home');
+  // 처음 열 때 스켈레톤
+  $('#homeScroll').innerHTML=`<div class="sk" style="height:16px;width:40%;margin-top:14px"></div><div class="sk" style="height:28px;width:70%;margin:10px 0 18px"></div><div class="sk" style="height:120px;border-radius:22px"></div><div class="sk" style="height:20px;width:35%;margin:26px 0 12px"></div>${'<div class="sk" style="height:92px;border-radius:20px;margin-bottom:10px"></div>'.repeat(3)}`;
+  setTimeout(()=>renderHome(true),900);
+}
+function renderHome(first){
+  const ms=state.missions,doneN=ms.filter(m=>m.done).length,all=doneN===ms.length,pct=Math.round(doneN/ms.length*100);
+  const name=state.nick||'우디';
+  $('#streak').textContent=all?`연속 ${state.streak}일 달성`:`연속 ${state.streak}일째`;
+  const C=2*Math.PI*36;
+  $('#homeScroll').innerHTML=`
+    <div class="${first?'stagger':''}">
+      <p class="date">${todayLabel()}</p>
+      <p class="hello">${name}님, 오늘도<br>반가워요</p>
+      <div class="summary">
+        <div class="ring" role="img" aria-label="오늘 훈련 ${doneN}/${ms.length} 완료">
+          <svg viewBox="0 0 84 84"><circle class="track" cx="42" cy="42" r="36" fill="none" stroke-width="9"/><circle class="bar" id="ringBar" cx="42" cy="42" r="36" fill="none" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-(state.lastPct||0)/100)}"/></svg>
+          <b id="ringNum">0%</b>
+        </div>
+        <div><p class="big">${all?'오늘 훈련을 모두 마쳤어요':`${ms.length}개 중 ${doneN}개 했어요`}</p><p class="small">${all?'내일 아침에 새 훈련이 열려요':`남은 시간 약 ${ms.filter(m=>!m.done).reduce((a,m)=>a+m.min,0)}분`}</p></div>
+        ${all?'':`<img class="cheer" src="${IMG.cheer}" alt="">`}
+      </div>
+      ${all?`
+      <div class="section-h"><h3>오늘의 훈련</h3><span>${ms.length}/${ms.length}</span></div>
+      <div class="alldone" id="alldone">
+        <img src="${IMG.done}" alt="활짝 웃는 맬랑이">
+        <h4>오늘 할 일 끝!</h4>
+        <p>잘하셨어요. 오늘은 여기까지 해도 충분해요.</p>
+        <div class="badge"><div class="medal">${state.streak}</div><div><b>${state.streak}일 연속 배지를 받았어요</b><small>기록에서 모은 배지를 볼 수 있어요</small></div></div>
+        <button class="cta" id="seeRecord">기록 보기</button>
+      </div>`:`
+      <div class="section-h"><h3>오늘의 훈련</h3><span>${doneN}/${ms.length}</span></div>
+      <div class="missions">${ms.map(m=>`
+        <button class="mission ${m.done?'done instant':''}" data-id="${m.id}" aria-label="${m.name}, ${m.done?'완료':'시작 전'}">
+          <img src="${IMG[m.img]}" alt="">
+          <span class="body"><span class="chip">${m.chip}</span><span class="name">${m.name}</span><span class="meta">${m.done?'완료했어요':`약 ${m.min}분`}</span></span>
+          <span class="state">${m.done?checkSvg:''}</span>
+        </button>`).join('')}</div>`}
+    </div>`;
+  // 진행률 원 + 카운트 업
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{$('#ringBar').style.strokeDashoffset=C*(1-pct/100);}));
+  countUp($('#ringNum'),state.lastPct||0,pct);state.lastPct=pct;
+  $$('.mission').forEach(b=>b.onclick=()=>openMission(b.dataset.id));
+  const sr=$('#seeRecord');if(sr)sr.onclick=()=>toast('기록 화면은 다음 테스트에서 만들어요');
+}
+function countUp(el,from,to){if(matchMedia('(prefers-reduced-motion: reduce)').matches||from===to){el.textContent=to+'%';return;}const t0=performance.now(),d=700;(function f(t){const k=Math.min(1,(t-t0)/d),e=1-Math.pow(1-k,3);el.textContent=Math.round(from+(to-from)*e)+'%';if(k<1)requestAnimationFrame(f);})(t0);}
+function openMission(id){
+  const m=state.missions.find(x=>x.id===id);
+  if(m.done){toast('이미 마친 훈련이에요');return;}
+  openSheet(`<div class="sheet-head"><img src="${IMG[m.img]}" alt="${m.alt}"><div><span class="chip">${m.chip}</span><h3 id="sheetTitle" style="margin-top:6px">${m.name}</h3></div></div><p>${m.desc}<br><b style="color:var(--text)">약 ${m.min}분</b> 걸려요.</p><button class="cta" id="startMission">시작하기</button><button class="ghost" id="laterMission">나중에 할게요</button>`,'#startMission');
+  $('#laterMission').onclick=closeSheet;
+  $('#startMission').onclick=e=>runCta(e.currentTarget,()=>true,()=>{
+    closeSheet();m.done=true;
+    const all=state.missions.every(x=>x.done);
+    if(all){state.streak=3;renderHome(false);confetti();toast('오늘 훈련을 모두 마쳤어요');}
+    else{renderHome(false);const card=$(`.mission[data-id="${id}"]`);card.classList.remove('instant');toast(`${m.chip} 훈련을 마쳤어요`);}
+  },null,'훈련하는 중');
+}
+$$('[data-soon]').forEach(b=>b.onclick=()=>toast('프로토타입에서는 오늘 탭만 볼 수 있어요'));
+
+/* ---------- 바로가기 / 초기화 ---------- */
+function showSignup(){$('#homeView').hidden=true;$('#signupView').hidden=false;closeSheet();$('#jumpSignup').setAttribute('aria-pressed','true');$('#jumpHome').setAttribute('aria-pressed','false');state.history=[];go(state.step===5?5:state.step,true);state.history=[];}
+$('#jumpSignup').onclick=showSignup;
+$('#jumpHome').onclick=()=>showHome(false);
+$('#reset').onclick=()=>{
+  state.missions=null;state.nick='';state.streak=2;state.lastPct=0;
+  $$('#signupView input').forEach(i=>{if(i.type==='checkbox')i.checked=false;else i.value='';});
+  ['#f-email','#f-pw','#f-birth','#f-nick'].forEach(id=>setField(id,'',id==='#f-birth'?'만 14세 이상만 가입할 수 있어요.':''));
+  for(const k in touched)delete touched[k];
+  checkPw(false);$('#meterLabel').textContent='';validate1();syncTerms();$('#next3').disabled=true;$('#nickCount').textContent='0/10';$('#avatarText').textContent='맬';
+  state.step=0;showSignup();
+};
+/* ---------- 테마 · 플랫폼 ---------- */
+const LOGO={light:"/_blob/3b725e923fe6aca1b1c6e69ecfd99b98",dark:"/_blob/574afcc1d0aa7a8386978c3a61bf2eca"};
+function currentTheme(){const t=document.documentElement.dataset.theme;return t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');}
+function applyTheme(t){if(t)document.documentElement.dataset.theme=t;const cur=currentTheme();
+  $$('.logo').forEach(i=>i.src=LOGO[cur]);IMG.logo=LOGO[cur];
+  $('#themeLight').setAttribute('aria-pressed',cur==='light');$('#themeDark').setAttribute('aria-pressed',cur==='dark');}
+$('#themeLight').onclick=()=>applyTheme('light');$('#themeDark').onclick=()=>applyTheme('dark');
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>applyTheme());
+const BACK={ios:'‹',android:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>'};
+function applyPlatform(p){phone.dataset.platform=p;$('#back').innerHTML=BACK[p];$('#platIos').setAttribute('aria-pressed',p==='ios');$('#platAndroid').setAttribute('aria-pressed',p==='android');}
+$('#platIos').onclick=()=>applyPlatform('ios');$('#platAndroid').onclick=()=>applyPlatform('android');
+applyTheme();applyPlatform('ios');
+renderNotes(0);
+</script>

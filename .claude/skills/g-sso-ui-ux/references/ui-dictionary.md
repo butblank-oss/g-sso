@@ -1,6 +1,6 @@
 # UI 이름 사전
 
-출처: Instagram 릴스 27개 (@uxwoodytips 26개, @qaonetop 1개). 카테고리마다 "언제 쓰는지"를 한 줄로 붙였다.
+출처: Instagram 릴스 28개 (@uxwoodytips 26개, @qaonetop 2개). iOS·안드로이드 차이는 `platform-ios-android.md`에 따로 정리. 카테고리마다 "언제 쓰는지"를 한 줄로 붙였다.
 
 ## 목차
 1. 입력 폼 · 2. QA 입력 UI · 3. 헷갈리는 UI 짝 1·2탄 · 4. 버튼 상태 · 5. 화면 이동(내비게이션) · 6. 메뉴 아이콘 별명 · 7. 공유 아이콘 · 8. 인디케이터 · 9. 평점 UI · 10. 완료 표시 · 11. 빈 화면 · 12. 앱 첫 화면 · 13. 회원가입 · 14. AI(챗) 화면 · 15. 화면 배치 · 16. 디자인 스타일 · 17. 화면 전환 · 18. 움직임 이름 · 19. 텍스트 등장 · 20. 제스처 · 21. 심리와 편향 · 22. 다크패턴 · 23. 리서치 방법 · 24. 숨은 UX: 당겨서 새로고침
@@ -65,7 +65,9 @@
 > AI에게: "버튼을 기본, 호버, 눌림, 비활성, 로딩, 성공, 오류 상태별로 다 만들어 줘"
 
 ## 5. 화면 이동 9가지 (내비게이션)
-하단 탭바 Tab bar · 상단 탭 Top tabs · 드로어 Navigation drawer · 브레드크럼 Breadcrumb · 고정 헤더 Sticky header · 플로팅 버튼 FAB · 페이지네이션 Pagination · 무한 스크롤 Infinite scroll · 뒤로 가기 Back navigation
+하단 탭바 Tab bar(화면 위에 떠 있는 캡슐형은 플로팅 탭바 Floating tab bar) · 상단 탭 Top tabs · 드로어 Navigation drawer · 브레드크럼 Breadcrumb · 고정 헤더 Sticky header · 플로팅 버튼 FAB · 페이지네이션 Pagination · 무한 스크롤 Infinite scroll · 뒤로 가기 Back navigation
+> 탭바 동작: 슬라이딩 인디케이터 Sliding indicator · 컨텍스트 탭바 Contextual tab bar(+ 떠 있는 뒤로 가기) · 탭바 말풍선 Tab bar tooltip · 새 소식 점 Badge dot.
+> 앱 바 종류: 큰 제목 Large title(스크롤하면 작은 제목으로 접힘 = 접히는 큰 제목 Collapsing large title) · 뒤로 가기형 · 닫기형(몰입 플로우).
 
 ## 6. 메뉴 아이콘 별명 9가지
 햄버거 Hamburger(≡) · 케밥 Kebab(⋮) · 미트볼 Meatballs(⋯) · 와플 Waffle(점 9개) · 벤토 Bento(네모 9개) · 도너 Döner(길이 다른 줄, 필터) · 베지 버거 Veggie burger(줄 2개) · 계단 Stairs(정렬) · 슬라이더 Sliders(설정/필터 조절)

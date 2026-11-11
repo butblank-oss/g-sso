@@ -66,6 +66,7 @@
 
 ## 5. 화면 이동 9가지 (내비게이션)
 하단 탭바 Tab bar(화면 위에 떠 있는 캡슐형은 플로팅 탭바 Floating tab bar) · 상단 탭 Top tabs · 드로어 Navigation drawer · 브레드크럼 Breadcrumb · 고정 헤더 Sticky header · 플로팅 버튼 FAB · 페이지네이션 Pagination · 무한 스크롤 Infinite scroll · 뒤로 가기 Back navigation
+> 탭바 동작: 슬라이딩 인디케이터 Sliding indicator · 컨텍스트 탭바 Contextual tab bar(+ 떠 있는 뒤로 가기) · 탭바 말풍선 Tab bar tooltip · 새 소식 점 Badge dot.
 > 앱 바 종류: 큰 제목 Large title(스크롤하면 작은 제목으로 접힘 = 접히는 큰 제목 Collapsing large title) · 뒤로 가기형 · 닫기형(몰입 플로우).
 
 ## 6. 메뉴 아이콘 별명 9가지

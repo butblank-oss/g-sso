@@ -175,6 +175,33 @@ body{background:var(--page);color:var(--text);font-family:var(--font);word-break
 .tabbar button:focus-visible{outline:3px solid var(--green);outline-offset:-3px}
 .phone.hide-tabbar .tabbar{transform:translateY(140%);opacity:0;pointer-events:none}
 
+/* 토스식 탭바: 미끄러지는 선택 알약 · 새 소식 점 · 말풍선 · 컨텍스트 탭바 */
+.tabbar .tgroup{position:absolute;inset:5px;display:flex;transition:opacity .2s,transform .38s var(--ease-enter)}
+.tabbar .tgroup.ctx{opacity:0;transform:scale(.6);pointer-events:none}
+.tabbar.in-ctx .tgroup.main{opacity:0;transform:scale(.6);pointer-events:none}
+.tabbar.in-ctx .tgroup.ctx{opacity:1;transform:none;pointer-events:auto}
+.tabbar button[aria-current="page"]{background:transparent!important}
+.tpill{position:absolute;top:5px;bottom:5px;left:0;width:0;border-radius:999px;background:var(--green-soft);transition:transform .38s var(--ease-enter),width .38s var(--ease-enter)}
+.tdot{position:absolute;top:9px;left:calc(50% + 8px);width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px #fff}
+.tabbar button{position:relative}
+.tabbar{transition:left .38s var(--ease-enter),transform .3s var(--ease-enter),opacity .2s}
+.phone.ctx-mode .tabbar{left:calc(14px + 64px + 8px)}
+.tabback{position:absolute;left:14px;bottom:calc(var(--home-h) - 8px);z-index:25;width:64px;height:64px;border:0;border-radius:999px;background:var(--glass-tab);backdrop-filter:blur(20px) saturate(170%);-webkit-backdrop-filter:blur(20px) saturate(170%);box-shadow:0 8px 24px rgba(0,0,0,.10),inset 0 0 0 1px rgba(0,0,0,.06);display:grid;place-items:center;color:var(--text);cursor:pointer;opacity:0;transform:translateX(-24px) scale(.8);pointer-events:none;transition:opacity .2s,transform .38s var(--ease-enter)}
+.tabback svg{width:24px;height:24px}
+.phone[data-platform="android"] .tabback{bottom:calc(var(--home-h) + 4px)}
+.phone.ctx-mode .tabback{opacity:1;transform:none;pointer-events:auto}
+.phone.hide-tabbar .tabback{opacity:0;pointer-events:none}
+.tabback:focus-visible{outline:3px solid var(--green);outline-offset:-3px}
+.tip{position:absolute;left:14px;right:14px;bottom:calc(var(--home-h) - 8px + 64px + 14px);z-index:26;display:flex;align-items:center;gap:8px;padding:14px 6px 14px 20px;border-radius:22px;background:#fff;box-shadow:0 12px 30px rgba(0,0,0,.14),inset 0 0 0 1px rgba(0,0,0,.05);transition:opacity .2s,transform .3s var(--ease-enter)}
+.tip::after{content:"";position:absolute;bottom:-7px;left:var(--tip-x,15%);width:14px;height:14px;margin-left:-7px;background:#fff;transform:rotate(45deg);box-shadow:1px 1px 0 rgba(0,0,0,.05)}
+.tip__b{flex:1;display:flex;flex-direction:column;gap:2px}.tip__b b{font-size:16px}.tip__b span{font-size:14px;color:var(--text-3)}
+.tip[hidden]{display:none}
+.phone:not(.on-today) .tip{display:none}
+.phone[data-platform="android"] .tip{bottom:calc(var(--home-h) + 4px + 64px + 14px)}
+.phone.hide-tabbar .tip,.phone.ctx-mode .tip{opacity:0;pointer-events:none}
+.grow{display:flex;align-items:center;gap:14px;background:#fff;border-radius:20px;margin:0 16px 10px;padding:16px}
+.grow i{width:48px;height:48px;border-radius:14px;background:#E8F0FB;flex:none}
+.grow b{display:block;font-size:17px}.grow span{font-size:14px;color:var(--text-3)}
 /* 바텀시트: 탭바보다 위 층 */
 .scrim{position:absolute;inset:0;z-index:50;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .24s var(--ease-exit)}
 .sheet{position:absolute;left:0;right:0;bottom:0;z-index:51;background:#fff;border-radius:28px 28px 0 0;padding:12px 0 calc(var(--home-h) + 12px);transform:translate3d(0,100%,0);visibility:hidden;transition:transform .24s var(--ease-exit),visibility 0s .24s}
@@ -1517,6 +1544,10 @@ body{background:var(--page);color:var(--text);font-family:var(--font);word-break
     </div>
   </section>
 
+  <section class="screen sub" id="s-games" hidden>
+    <div class="bar"><div class="bar__in"><span class="bar__title" id="gTitle">기억력 게임</span></div></div>
+    <div class="scroller"><p class="ex">예시 화면 · 컨텍스트 탭바를 보여주려고 만들었어요</p><div id="gList"></div></div>
+  </section>
   <section class="screen flow" id="s-flow" hidden>
     <div class="fbar"><div class="segs"><i class="on"></i><i></i><i></i><i></i><i></i></div>
       <div class="fbar__row"><span>1 / 5 번째 운동</span><button class="iconbtn" data-act="close" aria-label="운동 그만하기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div></div>
@@ -1524,7 +1555,7 @@ body{background:var(--page);color:var(--text);font-family:var(--font);word-break
     <div class="fbtns"><button class="ghost" data-act="soon">+10초</button><button class="main" data-act="soon">바로 시작</button></div>
   </section>
 
-  <nav class="tabbar" aria-label="주요 메뉴"><button data-go="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="fill" d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>오늘</span></button><button data-go="perf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect class="fill" x="3.5" y="12" width="4.5" height="8.5" rx="1.5"/><rect class="fill" x="9.75" y="7" width="4.5" height="13.5" rx="1.5"/><rect class="fill" x="16" y="3.5" width="4.5" height="17" rx="1.5"/></svg><span>성과</span></button><button data-go="more"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect class="fill" x="3" y="3" width="7.5" height="7.5" rx="2"/><rect class="fill" x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect class="fill" x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M17.25 13.5v7.5M13.5 17.25H21"/></svg><span>더 해보기</span></button><button data-go="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle class="fill" cx="12" cy="8" r="4"/><path class="fill" d="M4 21a8 8 0 0 1 16 0z"/></svg><span>내 정보</span></button></nav>
+  <button class="tabback" id="tabBack" aria-label="더 해보기로 돌아가기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button><nav class="tabbar" id="tabbar" aria-label="주요 메뉴"><span class="tpill" id="tpill"></span><div class="tgroup main"><button data-go="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="fill" d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>오늘</span></button><button data-go="perf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect class="fill" x="3.5" y="12" width="4.5" height="8.5" rx="1.5"/><rect class="fill" x="9.75" y="7" width="4.5" height="13.5" rx="1.5"/><rect class="fill" x="16" y="3.5" width="4.5" height="17" rx="1.5"/></svg><span>성과</span></button><button data-go="more"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect class="fill" x="3" y="3" width="7.5" height="7.5" rx="2"/><rect class="fill" x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect class="fill" x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M17.25 13.5v7.5M13.5 17.25H21"/></svg><span>더 해보기</span><i class=tdot aria-label=새소식></i></button><button data-go="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle class="fill" cx="12" cy="8" r="4"/><path class="fill" d="M4 21a8 8 0 0 1 16 0z"/></svg><span>내 정보</span></button></div><div class="tgroup ctx" aria-hidden="true"><button data-ctx="mem" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect class="fill" x="3" y="3" width="7.5" height="7.5" rx="2"/><rect class="fill" x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect class="fill" x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M17.25 13.5v7.5M13.5 17.25H21"/></svg><span>기억력</span></button><button data-ctx="att" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect class="fill" x="3" y="3" width="7.5" height="7.5" rx="2"/><rect class="fill" x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect class="fill" x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M17.25 13.5v7.5M13.5 17.25H21"/></svg><span>주의력</span></button><button data-ctx="lang" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect class="fill" x="3" y="3" width="7.5" height="7.5" rx="2"/><rect class="fill" x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect class="fill" x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M17.25 13.5v7.5M13.5 17.25H21"/></svg><span>언어능력</span></button></div></nav><div class="tip" id="tip" role="status"><div class="tip__b"><b>오늘 활동 3개가 남았어요</b><span>모두 합쳐 약 12분이에요</span></div><button class="iconbtn" data-act="tipclose" aria-label="안내 닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
 
   <div class="scrim" id="scrim"></div>
   <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle">
@@ -1549,7 +1580,7 @@ body{background:var(--page);color:var(--text);font-family:var(--font);word-break
   <p class="lbl">화면 바로가기</p>
   <div class="seg" role="group" aria-label="화면 바로가기">
     <button data-jump="today" aria-pressed="true">오늘</button><button data-jump="perf" aria-pressed="false">성과</button><button data-jump="more" aria-pressed="false">더 해보기</button><button data-jump="me" aria-pressed="false">내 정보</button>
-    <button data-jump="history" aria-pressed="false">하위 화면</button><button data-jump="sheet" aria-pressed="false">바텀시트</button><button data-jump="flow" aria-pressed="false">활동 플로우</button>
+    <button data-jump="history" aria-pressed="false">하위 화면</button><button data-jump="sheet" aria-pressed="false">바텀시트</button><button data-jump="ctx" aria-pressed="false">컨텍스트 탭바</button><button data-jump="flow" aria-pressed="false">활동 플로우</button>
   </div>
   <div class="notes"><h2>스킬이 적용한 것</h2><p class="nm" id="nTitle"></p><dl id="nList"></dl></div>
 </aside>
@@ -1560,10 +1591,11 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const phone=$('#phone');
 let cur='today',stack=[],dlgOpener=null,sheetOpener=null;
 const NOTES={
- tab:['탭 첫 화면 · 접히는 큰 제목',[['기획','탭마다 제목 하나. 오늘 탭만 알림 종(새 소식 빨간 점)'],['디자인','맨 위는 24px 큰 제목. 스크롤하면 유리 면의 작은 제목 바(17px)가 나타나 지금 탭이 계속 보여요'],['디자인','하단은 떠 있는 캡슐 탭바: 아이콘 + 라벨, 선택 탭만 알약 배경과 채운 아이콘'],['프론트','누르는 곳은 모두 48px 이상. 접힘은 opacity·transform만. 탭마다 스크롤 위치를 기억해요'],['플랫폼','작은 제목: iOS 가운데, 안드로이드 왼쪽. 상태 표시줄과 아래 안전 영역 높이도 OS별로']]],
+ tab:['탭 첫 화면 · 접히는 큰 제목',[['기획','탭마다 제목 하나. 오늘 탭만 알림 종(새 소식 빨간 점)'],['디자인','맨 위는 24px 큰 제목. 스크롤하면 유리 면의 작은 제목 바(17px)가 나타나 지금 탭이 계속 보여요'],['디자인','하단은 떠 있는 캡슐 탭바: 아이콘 + 라벨. 선택 알약이 이전 탭과 새 탭에 걸쳐 늘어났다가 미끄러져 자리 잡아요'],['디자인','더 해보기 탭의 빨간 점은 새 소식. 말풍선은 사실만 담고(오늘 활동 3개 남음) X로 닫으면 다시 안 떠요'],['프론트','누르는 곳은 모두 48px 이상. 접힘은 opacity·transform만. 탭마다 스크롤 위치를 기억해요'],['플랫폼','작은 제목: iOS 가운데, 안드로이드 왼쪽. 상태 표시줄과 아래 안전 영역 높이도 OS별로']]],
  perf:['성과 · 월 선택 제목',[['기획','큰 제목이 월 선택 버튼(2026년 9월 ⌄)이라, 접히면 "9월 성과"로 보여줘요'],['디자인','제목 버튼에 화살표를 붙여 눌리는 제목임을 알려요'],['프론트','"전체 순위 보기"는 바텀시트. 시트가 탭바를 덮도록 층을 올렸어요(원본은 탭바가 시트를 가림)']]],
  history:['하위 화면 · 뒤로 가기형',[['기획','탭 안에서 더 들어간 화면은 뒤로 가기 바. 탭바는 그대로 보여 지금 어느 탭인지 알 수 있어요'],['디자인','바는 처음부터 고정된 작은 제목 + 유리 면'],['플랫폼','iOS: ‹ + 이전 화면 이름(내 정보), 제목 가운데. 안드로이드: ← 아이콘, 제목 왼쪽'],['프론트','푸시 전환 0.38초 감속, 돌아갈 때 0.24초 가속. 오버슈트 없음']]],
  sheet:['바텀시트 · 탭바 위에',[['기획','순위처럼 잠깐 보는 정보는 시트로. 닫으면 보던 자리 그대로'],['프론트','시트와 딤이 탭바보다 위 층. 열린 뒤에 포커스, 닫으면 누른 버튼으로 포커스 복귀'],['디자인','손잡이 + 오른쪽 위 닫기(X) 48px, 내 순위 행은 초록 강조']]],
+ ctx:['컨텍스트 탭바 · 더 해보기 › 게임 모음',[['기획','깊은 영역에서는 탭바가 그 영역의 하위 탭(기억력 · 주의력 · 언어능력)으로 바뀌어요. 지금 어디에 있는지 바로 보여요'],['디자인','왼쪽에 떠 있는 둥근 뒤로 가기 버튼. 누르면 하위 탭이 모였다가 주요 탭으로 다시 펼쳐져요'],['프론트','바뀐 탭 묶음만 키보드로 갈 수 있게 tabindex·aria-hidden을 바꿔요']]],
  flow:['활동 플로우 · 닫기형',[['기획','몰입 화면이라 탭바를 숨겨요. 닫기는 모든 플로우에서 오른쪽 위로 통일'],['기획','X를 누르면 바로 나가지 않고 "그만할까요?" 확인. 거절을 탓하는 문구 없음'],['디자인','진행 막대 + "1 / 5 번째 운동"은 왼쪽, 닫기는 오른쪽'],['플랫폼','확인 창: iOS 알림창(가운데, 버튼 가로) / 안드로이드 다이얼로그(왼쪽 정렬, 오른쪽 아래 텍스트 버튼)']]],
 };
 function notes(k){const [t,rows]=NOTES[k]||NOTES.tab;$('#nTitle').textContent=t;$('#nList').innerHTML=rows.map(([a,b])=>`<div class="row"><dt>${a}</dt><dd>${b}</dd></div>`).join('');}
@@ -1576,12 +1608,49 @@ function showTab(k){
   $$('.screen').forEach(s=>{s.hidden=true;s.classList.remove('push-in','push-out','under');});
   const s=$('#s-'+k);s.hidden=false;cur=k;stack=[];
   phone.classList.remove('hide-tabbar','dark-status');
-  $$('.tabbar button').forEach(b=>b.toggleAttribute('aria-current',b.dataset.go===k));
-  $$('.tabbar button[aria-current]').forEach(b=>b.setAttribute('aria-current','page'));
+  setCurrent(k);exitCtx(true);
   notes(k==='perf'?'perf':'tab');markJump(k);
 }
-$$('.tabbar button').forEach(b=>b.onclick=()=>{if(b.dataset.go===cur&&!stack.length){const sc=$('#s-'+cur+' .scroller');sc.scrollTo({top:0,behavior:'smooth'});return;}showTab(b.dataset.go);});
+$$('.tabbar [data-go]').forEach(b=>b.onclick=()=>{if(b.dataset.go===cur&&!stack.length){const sc=$('#s-'+cur+' .scroller');sc.scrollTo({top:0,behavior:'smooth'});return;}showTab(b.dataset.go);});
 
+/* 선택 알약: 이전 탭과 새 탭에 걸쳐 늘어났다가 새 탭으로 */
+const tabbarEl=$('#tabbar'),pill=$('#tpill');
+function pillTo(btn,anim){if(!btn)return;const b=btn.getBoundingClientRect(),p=tabbarEl.getBoundingClientRect();
+  const go=()=>{pill.style.width=b.width+'px';pill.style.transform=`translateX(${b.left-p.left}px)`;};
+  if(!anim||matchMedia('(prefers-reduced-motion: reduce)').matches){pill.style.transition='none';go();pill.offsetWidth;pill.style.transition='';return;}
+  const f=pill.getBoundingClientRect();const l=Math.min(f.left,b.left)-p.left,r=Math.max(f.right,b.right)-p.left;
+  pill.style.width=(r-l)+'px';pill.style.transform=`translateX(${l}px)`;setTimeout(go,150);}
+function setCurrent(k,anim){const grp=tabbarEl.classList.contains('in-ctx')?'.ctx':'.main';
+  $$('.tabbar button').forEach(b=>b.removeAttribute('aria-current'));
+  const btn=$(`.tabbar ${grp} [data-go="${k}"]`)||$(`.tabbar ${grp} [data-ctx="${k}"]`);if(btn)btn.setAttribute('aria-current','page');pillTo(btn,anim);}
+let lastTab='today';
+const _showTab=showTab;showTab=function(k){const anim=k!==lastTab;_showTab(k);lastTab=k;phone.classList.toggle('on-today',k==='today');setCurrent(k,anim);if(k==='more')$('.tdot')&&$('.tdot').remove();};
+/* 말풍선: 사실만, X로 닫으면 다시 안 띄움 */
+const tip=$('#tip');function placeTip(){const t=$('.tabbar .main [data-go="today"]');if(!t)return;const r=t.getBoundingClientRect(),q=tip.getBoundingClientRect();tip.style.setProperty('--tip-x',(r.left+r.width/2-q.left)+'px');}
+requestAnimationFrame(placeTip);
+/* 컨텍스트 탭바: 더 해보기 › 게임 모음 */
+const GAMES={mem:['기억의 순차짝짓기','기억의 숨바꼭질','숨은 헬씨 찾기'],att:['진짜 색깔 찾기','양말정리 대작전'],lang:['초성 퀴즈','낱말 잇기']};
+const GNAME={mem:'기억력',att:'주의력',lang:'언어능력'};
+function renderGames(k){$('#gTitle').textContent=GNAME[k]+' 게임';$('#gList').innerHTML=GAMES[k].map(n=>`<div class="grow"><i></i><div><b>${n}</b><span>약 3분</span></div></div>`).join('');}
+function enterCtx(k){
+  const from=$('#s-'+cur);from.classList.add('under');const to=$('#s-games');renderGames(k);to.hidden=false;to.classList.remove('push-out');to.classList.add('push-in');to.style.zIndex=10;
+  phone.classList.add('ctx-mode');tabbarEl.classList.add('in-ctx');$$('.tgroup.ctx button').forEach(b=>b.tabIndex=0);$$('.tgroup.main button').forEach(b=>b.tabIndex=-1);
+  $('.tgroup.ctx').setAttribute('aria-hidden','false');$('.tgroup.main').setAttribute('aria-hidden','true');
+  setTimeout(()=>setCurrent(k,false),200);notes('ctx');markJump('ctx');
+}
+function exitCtx(silent){
+  if(!phone.classList.contains('ctx-mode'))return;
+  phone.classList.remove('ctx-mode');tabbarEl.classList.remove('in-ctx');
+  $$('.tgroup.ctx button').forEach(b=>b.tabIndex=-1);$$('.tgroup.main button').forEach(b=>b.tabIndex=0);
+  $('.tgroup.ctx').setAttribute('aria-hidden','true');$('.tgroup.main').setAttribute('aria-hidden','false');
+  const g=$('#s-games');if(silent){g.hidden=true;g.classList.remove('push-in');return;}
+  g.classList.remove('push-in');g.classList.add('push-out');$('#s-more').classList.remove('under');
+  setTimeout(()=>{g.hidden=true;g.classList.remove('push-out');g.style.zIndex='';},240);
+  setTimeout(()=>setCurrent('more',false),200);notes('tab');markJump('more');
+}
+$('#tabBack').onclick=()=>exitCtx(false);
+$$('[data-ctx]').forEach(b=>b.onclick=()=>{renderGames(b.dataset.ctx);setCurrent(b.dataset.ctx,true);});
+addEventListener('resize',()=>{setCurrent(phone.classList.contains('ctx-mode')?($('.ctx [aria-current]')||{}).dataset?.ctx:cur,false);placeTip();});
 /* 접히는 큰 제목 */
 $$('.tabroot').forEach(s=>{const sc=s.querySelector('.scroller');sc.addEventListener('scroll',()=>s.classList.toggle('collapsed',sc.scrollTop>36),{passive:true});});
 
@@ -1606,7 +1675,7 @@ $('#scrim').onclick=()=>closeSheet();
 
 /* 활동 플로우 */
 function openFlow(){
-  closeSheet(true);
+  closeSheet(true);exitCtx(true);
   const s=$('#s-flow');stack=[cur];$('#s-'+cur).hidden=true;s.hidden=false;s.classList.add('push-in');
   phone.classList.add('hide-tabbar','dark-status');notes('flow');markJump('flow');
   setTimeout(()=>s.classList.remove('push-in'),400);
@@ -1620,6 +1689,7 @@ document.addEventListener('click',e=>{
     if(k==='noti')return toast('새 소식 1개 · 알림 화면은 이번 범위 밖이에요');
     if(k==='month')return toast('월 선택은 이번 범위 밖이에요');
     if(k==='sheetclose')return closeSheet();
+    if(k==='tipclose'){tip.hidden=true;return;}
     if(k==='close')return openDlg();
     if(k==='stay')return closeDlg();
     if(k==='quit'){$('#dlg').classList.remove('open');showTab(stack[0]||'today');return toast('지금까지 한 운동을 저장했어요');}
@@ -1632,6 +1702,7 @@ document.addEventListener('click',e=>{
   if(cur==='today'&&/^시작하기$|^시작$/.test(t))return openFlow();
   if(cur==='perf'&&/전체 순위 보기/.test(t)&&t.length<20)return openSheet();
   if(cur==='me'&&/프로그램 진행 내역/.test(t)&&t.length<40)return push('history');
+  if(cur==='more'&&/(전체|기억력|주의력|언어능력|문제해결)/.test(t)&&t.length<12)return enterCtx(/주의력/.test(t)?'att':/언어/.test(t)?'lang':'mem');
 });
 document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if($('#dlg').classList.contains('open'))closeDlg();else closeSheet();});
 
@@ -1645,6 +1716,7 @@ $$('[data-jump]').forEach(b=>b.onclick=()=>{const k=b.dataset.jump;
   if(k==='history'){showTab('me');return setTimeout(()=>push('history'),30);}
   if(k==='sheet'){showTab('perf');return setTimeout(openSheet,30);}
   if(k==='flow'){showTab('today');return setTimeout(openFlow,30);}
+  if(k==='ctx'){showTab('more');return setTimeout(()=>enterCtx('mem'),60);}
 });
 showTab('today');
 </script>

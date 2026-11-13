@@ -206,7 +206,7 @@ details.card[open] summary{margin-bottom:12px}
 .field > label.drop,.drop{display:flex;flex-direction:column;align-items:center;gap:4px;padding:28px 16px;border:2px dashed var(--line);border-radius:16px;cursor:pointer;text-align:center;transition:border-color .15s,background .15s}
 .drop:hover,.drop.over{border-color:var(--blue);background:var(--blue-weak)}
 .drop-ic{font-size:30px}.drop b{font-size:16px;word-break:break-all}
-.maps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.maps{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .mapc span{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
 .mapc .inp{height:44px;font-size:14px;padding:0 8px}
 
@@ -293,13 +293,13 @@ const DEFAULT_PAYS = ['현대카드(네이버)','국민카드(쿠팡)','신한�
 const DEFAULT_RULES = [
  ['쿠팡이츠','식비'],['배달의민족','식비'],['배민','식비'],['요기요','식비'],['쿠팡와우','구독'],['와우멤버십','구독'],['네이버플러스','구독'],['넷플릭스','구독'],['유튜브','구독'],['우주패스','구독'],['티빙','구독'],['디즈니','구독'],
  ['GS칼텍스','차량'],['SK에너지','차량'],['S-OIL','차량'],['현대오일뱅크','차량'],['주유','차량'],['주차','차량'],['하이패스','차량'],['도로공사','차량'],['톨게이트','차량'],['세차','차량'],
- ['KTX','교통'],['SRT','교통'],['코레일','교통'],['카카오T','교통'],['택시','교통'],['티머니','교통'],['버스','교통'],['지하철','교통'],['K-패스','교통'],
+ ['KTX','교통'],['SRT','교통'],['코레일','교통'],['카카오T','교통'],['택시','교통'],['티머니','교통'],['버스','교통'],['지하철','교통'],['K-패스','교통'],['체크교통','교통'],['교통카드','교통'],
  ['스타벅스','카페/편의점'],['메가커피','카페/편의점'],['메가MGC','카페/편의점'],['이디야','카페/편의점'],['투썸','카페/편의점'],['컴포즈','카페/편의점'],['빽다방','카페/편의점'],['커피','카페/편의점'],['카페','카페/편의점'],['GS25','카페/편의점'],['CU','카페/편의점'],['세븐일레븐','카페/편의점'],['이마트24','카페/편의점'],['편의점','카페/편의점'],
  ['트레이더스','식비'],['이마트','식비'],['롯데마트','식비'],['홈플러스','식비'],['롯데슈퍼','식비'],['하나로마트','식비'],['컬리','식비'],['맥도날드','식비'],['버거킹','식비'],['맘스터치','식비'],['롯데리아','식비'],['김밥','식비'],['파리바게','식비'],['뚜레쥬르','식비'],
- ['동물병원','반려견'],['개밥왕','반려견'],['로얄캐닌','반려견'],['애견','반려견'],['펫','반려견'],
+ ['동물병원','반려견'],['동물병','반려견'],['개밥왕','반려견'],['로얄캐닌','반려견'],['애견','반려견'],['펫','반려견'],
  ['약국','건강'],['치과','건강'],['한의원','건강'],['의원','건강'],['병원','건강'],['아이허브','건강'],
  ['SK텔레콤','통신'],['SKT','통신'],['LG유플러스','통신'],['KT','통신'],
- ['손해보험','보험'],['화재','보험'],['보험','보험'],['관리비','주거'],['유니세프','기부'],['후원','기부'],
+ ['손해보험','보험'],['손해','보험'],['DB손','보험'],['KB손','보험'],['주택금융','주거'],['화재','보험'],['보험','보험'],['관리비','주거'],['유니세프','기부'],['후원','기부'],
  ['무신사','쇼핑/미용'],['지그재그','쇼핑/미용'],['29CM','쇼핑/미용'],['에이블리','쇼핑/미용'],['올리브영','쇼핑/미용'],['미용실','쇼핑/미용'],['헤어','쇼핑/미용'],['당근','쇼핑/미용'],
  ['CGV','문화/취미'],['메가박스','문화/취미'],['롯데시네마','문화/취미'],['인터파크','문화/취미'],['티켓링크','문화/취미'],['예스24','문화/취미'],['교보문고','문화/취미'],['클라이밍','문화/취미'],
  ['다이소','생활용품'],['쿠팡','생활용품']
@@ -308,6 +308,9 @@ const DEFAULT_RULES = [
 /* ---------- 상태 ---------- */
 const LS_DATA='gsso-budget-v1', LS_SYNC='gsso-budget-sync';
 let state = loadLocal();
+function migrateRules(){ const S=state.settings; if((S.rulesV||1)>=2) return; const have=new Set(S.rules.map(r=>r.kw));
+  const add=DEFAULT_RULES.filter(r=>!have.has(r.kw)); S.rules=add.concat(S.rules); S.rulesV=2; if(add.length) S.updatedAt=Date.now(); }
+migrateRules();
 let sync = (()=>{try{return JSON.parse(localStorage.getItem(LS_SYNC))||{}}catch(e){return {}}})();
 let ui = {tab:'home', month:monthKey(new Date()), filterCat:'', filterPay:'', syncStatus:'idle', syncMsg:'', lastSync:null};
 
@@ -334,8 +337,8 @@ function groupOf(name){return catOf(name)?.group||'none'}
 const liveTx=()=>state.tx.filter(t=>!t.deleted);
 const monthTx=mk=>liveTx().filter(t=>t.date&&t.date.slice(0,7)===mk);
 function autoCat(text){
-  const s=String(text||'').toLowerCase();
-  for(const r of state.settings.rules){ if(r.kw && s.includes(r.kw.toLowerCase())) return r.cat; }
+  const s=String(text||'').normalize('NFKC').toLowerCase();
+  for(const r of state.settings.rules){ if(r.kw && s.includes(r.kw.normalize('NFKC').toLowerCase())) return r.cat; }
   return '';
 }
 function normDate(v){
@@ -488,19 +491,19 @@ function viewList(){
 }
 
 /* ---------- 카드내역 엑셀 올리기 ---------- */
-let imp={rows:[],pay:'',grid:null,head:-1,map:{date:-1,merchant:-1,amount:-1},file:'',err:''};
+let imp={rows:[],pay:'',grid:null,head:-1,map:{date:-1,merchant:-1,amount:-1,income:-1},file:'',err:''};
 function colName(i){ const h=imp.grid&&imp.head>=0?imp.grid[imp.head][i]:''; return (h&&String(h).trim())||`${i+1}번째 칸`; }
 function viewImport(){
   const pays=state.settings.pays.map(p=>`<button class="chip plain" aria-pressed="${imp.pay===p}" data-ipay="${esc(p)}">${esc(p)}</button>`).join('');
   const sel=imp.rows.filter(r=>r.on).length;
-  const opts=c=>`<option value="">미분류</option>`+GROUPS.map(g=>`<optgroup label="${g}">`+state.settings.cats.filter(x=>x.group===g).map(x=>`<option ${x.name===c?'selected':''}>${esc(x.name)}</option>`).join('')+'</optgroup>').join('');
+  const opts=(c,k)=>`<option value="">${k==='in'?'분류 고르기':'미분류'}</option>`+(k==='in'?['수입','저축','변동비','고정비','비정기']:GROUPS).map(g=>`<optgroup label="${g}">`+state.settings.cats.filter(x=>x.group===g).map(x=>`<option ${x.name===c?'selected':''}>${esc(x.name)}</option>`).join('')+'</optgroup>').join('');
   const ncol=imp.grid?Math.max(...imp.grid.slice(0,60).map(r=>r.length)):0;
-  const colSel=(k,lab)=>`<label class="mapc"><span>${lab}</span><select class="inp" data-imap="${k}">${Array.from({length:ncol},(_,i)=>`<option value="${i}" ${imp.map[k]===i?'selected':''}>${esc(colName(i))}</option>`).join('')}</select></label>`;
-  return `<div class="top"><h1>카드내역 올리기</h1>${syncBadge()}</div>
+  const colSel=(k,lab,opt)=>`<label class="mapc"><span>${lab}</span><select class="inp" data-imap="${k}">${opt?`<option value="-1" ${imp.map[k]<0?'selected':''}>없음</option>`:''}${Array.from({length:ncol},(_,i)=>`<option value="${i}" ${imp.map[k]===i?'selected':''}>${esc(colName(i))}</option>`).join('')}</select></label>`;
+  return `<div class="top"><h1>카드·통장 내역 올리기</h1>${syncBadge()}</div>
   <div class="grid2"><div>
   <div class="card">
-    <div class="field"><span class="lab">1. 어떤 카드인가요?</span><div class="chips">${pays}</div><div class="err-t ${imp.err==='pay'?'on':''}">결제수단을 먼저 골라주세요</div></div>
-    <div class="field"><span class="lab">2. 카드사에서 받은 엑셀 파일 올리기</span>
+    <div class="field"><span class="lab">1. 어떤 카드·계좌인가요?</span><div class="chips">${pays}</div><div class="err-t ${imp.err==='pay'?'on':''}">결제수단을 먼저 골라주세요</div></div>
+    <div class="field"><span class="lab">2. 카드사·은행에서 받은 엑셀 파일 올리기</span>
       <label class="drop" id="drop"><input type="file" id="xlsFile" accept=".xlsx,.xls,.csv" hidden>
         <span class="drop-ic">📄</span>
         <b>${imp.file?esc(imp.file):'파일 고르기'}</b>
@@ -508,7 +511,7 @@ function viewImport(){
       </label>
       <div class="err-t ${imp.err&&imp.err!=='pay'?'on':''}">${esc(imp.err&&imp.err!=='pay'?imp.err:'')}</div>
     </div>
-    ${imp.grid?`<div class="field"><span class="lab">3. 칸이 맞는지 확인 <span class="tiny">(틀리면 바꿔주세요)</span></span><div class="maps">${colSel('date','날짜')}${colSel('merchant','가맹점')}${colSel('amount','금액')}</div></div>`:''}
+    ${imp.grid?`<div class="field"><span class="lab">3. 칸이 맞는지 확인 <span class="tiny">(틀리면 바꿔주세요)</span></span><div class="maps">${colSel('date','날짜')}${colSel('merchant','가맹점·내용')}${colSel('amount','금액(출금)')}${colSel('income','입금',true)}</div></div>`:''}
   </div>
   <div class="card"><h2>카드사 엑셀 받는 곳</h2>
     <p class="tiny" style="margin-bottom:8px">로그인 → 이용내역 조회 → 엑셀 다운로드</p>
@@ -522,9 +525,10 @@ function viewImport(){
   <div>${imp.rows.length?`<div class="card"><h2>미리보기 <small>${sel}건 선택 · ${won(imp.rows.filter(r=>r.on).reduce((a,r)=>a+r.amount,0))}원</small></h2>
     <table class="prev"><tbody>${imp.rows.map((r,i)=>`<tr class="${r.dup?'dup':''}">
       <td><input type="checkbox" class="cb" data-ion="${i}" ${r.on?'checked':''} aria-label="저장할지 선택"></td>
-      <td><div style="font-weight:600">${esc(r.merchant||'(가맹점 없음)')}</div><div class="tiny">${esc(r.date)}${r.dup?' · 이미 있는 내역':''}</div></td>
-      <td><select class="g-${groupOf(r.cat)}" data-icat="${i}" aria-label="분류">${opts(r.cat)}</select></td>
-      <td class="a num">${won(r.amount)}</td></tr>`).join('')}</tbody></table>
+      <td><div style="font-weight:600">${esc(r.merchant||'(가맹점 없음)')}</div><div class="tiny">${esc(r.date)}${r.kind==='in'?' · <b style="color:var(--blue)">입금</b>':''}${r.dup?' · 이미 있는 내역':''}</div>${r.note?`<div class="tiny" style="color:var(--amber)">${esc(r.note)}</div>`:''}</td>
+      <td><select class="g-${groupOf(r.cat)}" data-icat="${i}" aria-label="분류">${opts(r.cat,r.kind)}</select></td>
+      <td class="a num" ${r.kind==='in'?'style="color:var(--blue)"':''}>${r.kind==='in'?'+':''}${won(r.amount)}</td></tr>`).join('')}</tbody></table>
+    ${imp.rows.some(r=>r.kind==='in')?'<p class="tiny" style="margin-top:10px">입금 줄은 내 계좌끼리 옮긴 돈일 수 있어서 체크를 빼뒀어요. 수입이 맞으면 체크하고 분류를 골라주세요.</p>':''}
     <div style="margin-top:16px"><button class="btn" data-act="doImport" ${sel?'':'disabled'}>${sel}건 저장하기</button></div>
   </div>`:`<div class="card">${imp.grid?emptyHtml('🤔','읽을 수 있는 줄이 없어요','왼쪽에서 날짜·가맹점·금액 칸을 다시 골라보세요','칸 다시 고르기','focusMap'):emptyHtml('📋','파일을 올리면 여기에 미리 보여드려요','가맹점 이름으로 분류를 자동으로 골라둘게요. 틀린 건 바꿀 수 있어요','파일 고르기','pickFile')}</div>`}</div></div>`;
 }
@@ -562,30 +566,50 @@ function cellDate(v){
 }
 function cellNum(v){ return typeof v==='number'?v:toNum(v); }
 function detectCols(){
-  const g=imp.grid, RX={date:/(이용|거래|승인|매출|결제)?\s*(일자|일시|날짜|년월일)|^이용일$|^거래일$|^승인일$/, merchant:/가맹점|이용처|사용처|상호|이용하신\s*곳|거래처|내용|적요/, amount:/(이용|승인|결제|청구|매출|거래)\s*금액|^금액/};
-  const BAD=/수수료|이자|포인트|할인|잔액|원금|외화|해외|적립|혜택|회차|개월|USD/;
-  imp.head=-1; imp.map={date:-1,merchant:-1,amount:-1};
+  const g=imp.grid, BAD=/수수료|이자|포인트|할인|잔액|원금|외화|해외|적립|혜택|회차|개월|USD|시간|번호/;
+  const RX={date:/(이용|거래|승인|매출|결제)?\s*(일자|일시|날짜|년월일)|^이용일$|^거래일$|^승인일$/,
+    amount:/(이용|승인|결제|청구|매출)\s*금액|^금액/, out:/출금|지급|찾으신|보낸\s*금액/, inc:/입금|맡기신|받은\s*금액/};
+  const MER=[/가맹점/,/이용처|사용처|이용하신\s*곳/,/상호/,/받는\s*분|보낸\s*분|거래처|상대/,/내용/,/적요|메모/];
+  imp.head=-1; imp.map={date:-1,merchant:-1,amount:-1,income:-1};
+  const ok=(row,re)=>row.findIndex(c=>re.test(c)&&!BAD.test(c));
   for(let r=0;r<Math.min(g.length,40);r++){
     const row=g[r].map(c=>String(c).replace(/\s+/g,' ').trim());
-    const d=row.findIndex(c=>RX.date.test(c)), a=row.findIndex(c=>RX.amount.test(c)&&!BAD.test(c));
-    if(d>=0&&a>=0){ imp.head=r; imp.map.date=d; imp.map.amount=a; imp.map.merchant=row.findIndex(c=>RX.merchant.test(c)&&!BAD.test(c)); break; }
+    const d=row.findIndex(c=>RX.date.test(c)&&!/시간/.test(c));
+    let a=ok(row,RX.amount); const o=ok(row,RX.out), i=ok(row,RX.inc);
+    if(d<0||(a<0&&o<0)) continue;
+    imp.head=r; imp.map.date=d;
+    if(a<0){ a=o; imp.map.income=i; }
+    imp.map.amount=a;
+    for(const re of MER){ const m=ok(row,re); if(m>=0&&m!==d&&m!==a){ imp.map.merchant=m; break; } }
+    break;
   }
   const start=imp.head+1, sample=g.slice(start,start+40), ncol=Math.max(...g.slice(0,60).map(r=>r.length));
-  const score=f=>Array.from({length:ncol},(_,i)=>sample.filter(r=>f(r[i])).length);
+  const badCol=i=>imp.head>=0&&BAD.test(String(g[imp.head][i]||''));
+  const score=f=>Array.from({length:ncol},(_,i)=>badCol(i)?0:sample.filter(r=>f(r[i])).length);
   const best=(arr,skip)=>{let bi=-1,bv=0;arr.forEach((v,i)=>{if(!skip.includes(i)&&v>bv){bv=v;bi=i;}});return bi;};
   if(imp.map.date<0) imp.map.date=best(score(v=>!!cellDate(v)),[]);
   if(imp.map.amount<0) imp.map.amount=best(score(v=>{const n=cellNum(v);return !isNaN(n)&&Math.abs(n)>=100&&Math.abs(n)<1e8;}),[imp.map.date]);
-  if(imp.map.merchant<0){ const lens=Array.from({length:ncol},(_,i)=>sample.reduce((a,r)=>a+(typeof r[i]==='string'&&!cellDate(r[i])&&isNaN(toNum(r[i]))?r[i].length:0),0)); imp.map.merchant=best(lens,[imp.map.date,imp.map.amount]); }
+  if(imp.map.merchant<0){ const lens=Array.from({length:ncol},(_,i)=>badCol(i)?0:sample.reduce((a,r)=>a+(typeof r[i]==='string'&&!cellDate(r[i])&&isNaN(toNum(r[i]))&&!/^\d{1,2}:\d{2}/.test(r[i])?r[i].length:0),0)); imp.map.merchant=best(lens,[imp.map.date,imp.map.amount,imp.map.income]); }
 }
 function buildRows(){
-  const {date:di,merchant:mi,amount:ai}=imp.map, out=[];
+  const {date:di,merchant:mi,amount:ai,income:ii}=imp.map, out=[];
   for(let r=imp.head+1;r<imp.grid.length;r++){
-    const row=imp.grid[r]; const date=cellDate(row[di]), amount=cellNum(row[ai]);
+    const row=imp.grid[r]; const date=cellDate(row[di]);
     const merchant=String(mi>=0?row[mi]??'':'').replace(/\s+/g,' ').trim();
-    if(!date||isNaN(amount)||amount===0) continue;
-    if(/합계|소계|총\s*계|총이용/.test(merchant)) continue;
+    if(!date||/합계|소계|총\s*계|총이용/.test(merchant)) continue;
+    const o=cellNum(row[ai]), i=ii>=0?cellNum(row[ii]):NaN;
+    let amount, kind='out';
+    if(!isNaN(o)&&o!==0) amount=o; else if(!isNaN(i)&&i>0){ amount=i; kind='in'; } else continue;
     const dup=liveTx().some(t=>t.date===date&&t.amount===amount&&(t.merchant||t.memo)===merchant);
-    out.push({date,merchant,amount,cat:autoCat(merchant),on:!dup,dup});
+    out.push({date,merchant,amount,kind,cat:kind==='in'?'':autoCat(merchant),on:!dup&&kind==='out',dup,note:''});
+  }
+  // 내 계좌끼리 옮긴 돈: 입금에 나온 사람 이름이 출금에도 있으면
+  const names=[...new Set(out.filter(r=>r.kind==='in').map(r=>r.merchant).filter(m=>/^[가-힣]{2,3}$/.test(m)&&!/페이|은행|카드|머니/.test(m)))];
+  const CARDBILL=/카드\s*출금|카드\s*대금|^(현대|국민|KB|신한|삼성|롯데|하나|우리|BC|NH|농협)\s*카드$|카드결제대금/i;
+  for(const r of out){
+    if(r.kind!=='out') continue;
+    if(names.some(nm=>r.merchant.includes(nm))){ r.on=false; r.note='내 계좌로 옮긴 돈 같아요'; }
+    else if(CARDBILL.test(r.merchant.normalize('NFKC'))){ r.on=false; r.note='카드값 결제예요. 카드내역을 따로 올리면 두 번 계산돼요'; }
   }
   imp.rows=out;
 }
@@ -741,9 +765,10 @@ document.addEventListener('click',e=>{
     pickFile:()=>$('#xlsFile')?.click(), focusMap:()=>document.querySelector('[data-imap]')?.focus(),
     doImport:()=>{
       const now=Date.now(); let n=0;
+      const bad=imp.rows.filter(r=>r.on&&r.kind==='in'&&!r.cat).length; if(bad){ toast(`입금 ${bad}건의 분류를 골라주세요`); return; }
       imp.rows.filter(r=>r.on).forEach(r=>{ state.tx.push({id:uid(),date:r.date,cat:r.cat,amount:r.amount,pay:imp.pay,memo:'',merchant:r.merchant,updatedAt:now,deleted:false}); n++; });
       ui.month=imp.rows.find(r=>r.on)?.date.slice(0,7)||ui.month;
-      imp={rows:[],pay:imp.pay,grid:null,head:-1,map:{date:-1,merchant:-1,amount:-1},file:'',err:''}; persist(); ui.tab='home'; render(); toast(`${n}건 저장했어요`);
+      imp={rows:[],pay:imp.pay,grid:null,head:-1,map:{date:-1,merchant:-1,amount:-1,income:-1},file:'',err:''}; persist(); ui.tab='home'; render(); toast(`${n}건 저장했어요`);
     },
     saveSync:async()=>{
       const url=$('#syncUrl').value.trim(), key=$('#syncKey').value;

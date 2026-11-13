@@ -257,6 +257,13 @@ details.card summary{gap:8px}
 .sw i::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s var(--ease)}
 .sw input:checked+i{background:var(--blue)} .sw input:checked+i::after{transform:translateX(20px)}
 .sw input:focus-visible+i{outline:2px solid var(--blue);outline-offset:2px}
+.bsum{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:4px}
+.bsum div{background:var(--bg);border-radius:12px;padding:12px;min-width:0}
+.bsum span{display:block;font-size:12px;color:var(--sub)}
+.bsum b{display:block;font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bsum .pos{background:var(--blue-weak)} .bsum .pos b{color:var(--blue)}
+.bsum .neg{background:var(--red-weak)} .bsum .neg b{color:var(--red)}
+.group-t.gt{display:flex;justify-content:space-between;margin-top:18px}
 .hide{display:none!important}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -451,13 +458,17 @@ function viewHome(){
     ${payHtml?`<div class="card"><h2>결제수단별 사용액</h2>${payHtml}</div>`:''}
    </div>
    <div>
-    <div class="card"><h2>예산 <small>지출 예산의 ${rate}% 사용</small></h2>
+    <div class="card"><h2>예산 <small>${won(s.exp)} / ${won(spendBudget)}원 (${rate}%)</small></h2><div class="bar" style="margin:-4px 0 14px;height:10px"><i class="${rate>=100?'over':rate>=80?'warn':''}" style="width:${Math.min(100,rate)}%"></i></div>
       ${has||spendBudget?budgetHtml||'<p class="muted">예산이 없어요</p>':''}
       ${!spendBudget?emptyHtml('🎯','예산을 정해보세요','분류별로 한 달 예산을 넣으면 얼마나 썼는지 보여드려요','예산 정하기','go:settings'):''}
     </div>
    </div>
   </div>`;
 }
+function budgetTotals(){ const t={}; GROUPS.forEach(g=>t[g]=0); state.settings.cats.forEach(c=>{t[c.group]=(t[c.group]||0)+(c.budget||0);}); t.spend=t['고정비']+t['변동비']+t['비정기']; t.left=t['수입']-t.spend-t['저축']; return t; }
+function budgetSummary(){ const t=budgetTotals();
+  return `<div class="bsum"><div><span>예상 수입</span><b class="num">${won(t['수입'])}</b></div><div><span>지출 예산</span><b class="num">${won(t.spend)}</b></div><div><span>저축 목표</span><b class="num">${won(t['저축'])}</b></div><div class="${t.left<0?'neg':'pos'}"><span>${t.left<0?'모자람':'남는 돈'}</span><b class="num">${won(Math.abs(t.left))}</b></div></div>
+  <p class="tiny" style="margin:8px 0 4px">지출 예산 = 고정비 ${won(t['고정비'])} + 변동비 ${won(t['변동비'])} + 비정기 ${won(t['비정기'])}</p>`; }
 function emptyHtml(em,t,p,btn,act){
   const a=act.startsWith('go:')?`data-go="${act.slice(3)}"`:`data-act="${act}"`;
   return `<div class="empty"><div class="em">${em}</div><b>${t}</b><p>${p}</p><button class="btn sm" ${a}>${btn}</button></div>`;
@@ -617,7 +628,7 @@ function buildRows(){
 /* ---------- 설정 ---------- */
 function viewSettings(){
   const S=state.settings;
-  const budgets=GROUPS.map(g=>`<div class="group-t">${g==='수입'?'수입 (예상 금액)':g}</div>`+S.cats.filter(c=>c.group===g).map(c=>
+  const bt=budgetTotals(); const budgets=GROUPS.map(g=>`<div class="group-t gt"><span>${g==='수입'?'수입 (예상 금액)':g}</span><span class="num">${won(bt[g])}원</span></div>`+S.cats.filter(c=>c.group===g).map(c=>
     `<div class="set-row"><span class="nm">${esc(c.name)}</span><input class="inp num" inputmode="numeric" data-budget="${esc(c.name)}" value="${c.budget?won(c.budget):''}" placeholder="0" aria-label="${esc(c.name)} 예산"><button class="del" data-delcat="${esc(c.name)}" aria-label="${esc(c.name)} 삭제">${IC.trash}</button></div>`).join('')).join('');
   const pays=S.pays.map(p=>`<div class="set-row"><span class="nm">${esc(p)}</span><button class="del" data-delpay="${esc(p)}" aria-label="${esc(p)} 삭제">${IC.trash}</button></div>`).join('');
   const rules=S.rules.map((r,i)=>`<div class="set-row"><span class="nm">${esc(r.kw)}</span><span class="chip sm g-${groupOf(r.cat)}">${esc(r.cat)}</span><button class="del" data-delrule="${i}" aria-label="규칙 삭제">${IC.trash}</button></div>`).join('');
@@ -647,7 +658,7 @@ function viewSettings(){
     <div class="row-btns"><button class="btn sub" data-act="exportJson">백업 파일 받기</button><button class="btn sub" data-act="exportCsv">CSV(엑셀용)</button></div>
     <label class="btn sub" style="margin-top:8px">백업 파일 불러오기<input type="file" id="importFile" accept=".json" hidden></label>
   </div></div>
-  <div><div class="card"><h2>한 달 예산 <small>2024년 실제 평균 기준</small></h2>${budgets}
+  <div><div class="card"><h2>한 달 예산 <small>합계는 바로 계산돼요</small></h2>${budgetSummary()}${budgets}
     <div class="add-row"><select class="inp" id="newCatGroup">${GROUPS.map(g=>`<option>${g}</option>`).join('')}</select><input class="inp" id="newCat" placeholder="새 분류 이름"><button class="btn sm" data-act="addCat">추가</button></div>
   </div></div></div>`;
 }
@@ -799,7 +810,7 @@ document.addEventListener('change',e=>{
   if(d.icat!==undefined){ imp.rows[d.icat].cat=t.value; render(); return; }
   if(d.imap!==undefined){ imp.map[d.imap]=Number(t.value); buildRows(); render(); return; }
   if(t.id==='xlsFile'&&t.files[0]){ readXls(t.files[0]); t.value=''; return; }
-  if(d.budget!==undefined){ const c=catOf(d.budget); const n=toNum(t.value); c.budget=isNaN(n)?0:n; t.value=c.budget?won(c.budget):''; touchSettings(); if(c.name==='월급'){ ensureSalary(); persist(); render(); toast('월급을 바꿨어요. 이번 달 월급도 기록됐어요'); } else toast('예산을 바꿨어요'); return; }
+  if(d.budget!==undefined){ const c=catOf(d.budget); const n=toNum(t.value); c.budget=isNaN(n)?0:n; t.value=c.budget?won(c.budget):''; touchSettings(); if(c.name==='월급'){ ensureSalary(); persist(); render(); toast('월급을 바꿨어요. 이번 달 월급도 기록됐어요'); } else { render(); toast('예산을 바꿨어요'); } return; }
   if(t.id==='salOn'){ salaryConf().on=t.checked; touchSettings(); if(t.checked) ensureSalary(); persist(); render(); toast(t.checked?'월급 자동 기록을 켰어요':'월급 자동 기록을 껐어요'); return; }
   if(t.id==='salDay'){ const n=Math.min(31,Math.max(1,Math.round(toNum(t.value))||10)); salaryConf().day=n; touchSettings(); render(); toast(`매달 ${n}일에 기록할게요`); return; }
   if(t.id==='importFile'&&t.files[0]){

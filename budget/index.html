@@ -203,6 +203,12 @@ details.card summary::-webkit-details-marker{display:none}
 details.card summary::after{content:"";width:8px;height:8px;border-right:2px solid var(--sub);border-bottom:2px solid var(--sub);transform:rotate(45deg);transition:transform .2s}
 details.card[open] summary::after{transform:rotate(-135deg)}
 details.card[open] summary{margin-bottom:12px}
+.field > label.drop,.drop{display:flex;flex-direction:column;align-items:center;gap:4px;padding:28px 16px;border:2px dashed var(--line);border-radius:16px;cursor:pointer;text-align:center;transition:border-color .15s,background .15s}
+.drop:hover,.drop.over{border-color:var(--blue);background:var(--blue-weak)}
+.drop-ic{font-size:30px}.drop b{font-size:16px;word-break:break-all}
+.maps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mapc span{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
+.mapc .inp{height:44px;font-size:14px;padding:0 8px}
 .hide{display:none!important}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -413,21 +419,28 @@ function viewList(){
   }).join(''):`<div class="card">${emptyHtml('🗂️','이 조건의 내역이 없어요','필터를 풀거나 새로 기록해보세요','기록하기','add')}</div>`}`;
 }
 
-/* ---------- 카드내역 붙여넣기 ---------- */
-let imp={rows:[],pay:''};
+/* ---------- 카드내역 엑셀 올리기 ---------- */
+let imp={rows:[],pay:'',grid:null,head:-1,map:{date:-1,merchant:-1,amount:-1},file:'',err:''};
+function colName(i){ const h=imp.grid&&imp.head>=0?imp.grid[imp.head][i]:''; return (h&&String(h).trim())||`${i+1}번째 칸`; }
 function viewImport(){
   const pays=state.settings.pays.map(p=>`<button class="chip plain" aria-pressed="${imp.pay===p}" data-ipay="${esc(p)}">${esc(p)}</button>`).join('');
   const sel=imp.rows.filter(r=>r.on).length;
   const opts=c=>`<option value="">미분류</option>`+GROUPS.map(g=>`<optgroup label="${g}">`+state.settings.cats.filter(x=>x.group===g).map(x=>`<option ${x.name===c?'selected':''}>${esc(x.name)}</option>`).join('')+'</optgroup>').join('');
-  return `<div class="top"><h1>카드내역 붙여넣기</h1>${syncBadge()}</div>
+  const ncol=imp.grid?Math.max(...imp.grid.slice(0,60).map(r=>r.length)):0;
+  const colSel=(k,lab)=>`<label class="mapc"><span>${lab}</span><select class="inp" data-imap="${k}">${Array.from({length:ncol},(_,i)=>`<option value="${i}" ${imp.map[k]===i?'selected':''}>${esc(colName(i))}</option>`).join('')}</select></label>`;
+  return `<div class="top"><h1>카드내역 올리기</h1>${syncBadge()}</div>
   <div class="grid2"><div>
   <div class="card">
-    <div class="field"><span class="lab">1. 어떤 카드인가요?</span><div class="chips">${pays}</div><div class="err-t" id="payErr">결제수단을 골라주세요</div></div>
-    <div class="field"><label for="pasteBox">2. 카드사 엑셀에서 날짜·가맹점·금액 줄을 복사해서 붙여넣기</label>
-      <textarea class="inp" id="pasteBox" placeholder="예)&#10;2026.11.03	쿠팡이츠	23,500&#10;2026.11.04	GS칼텍스 의왕	80,000"></textarea>
-      <div class="err-t" id="pasteErr">읽을 수 있는 줄이 없어요. 날짜와 금액이 들어 있는지 확인해 주세요</div>
+    <div class="field"><span class="lab">1. 어떤 카드인가요?</span><div class="chips">${pays}</div><div class="err-t ${imp.err==='pay'?'on':''}">결제수단을 먼저 골라주세요</div></div>
+    <div class="field"><span class="lab">2. 카드사에서 받은 엑셀 파일 올리기</span>
+      <label class="drop" id="drop"><input type="file" id="xlsFile" accept=".xlsx,.xls,.csv" hidden>
+        <span class="drop-ic">📄</span>
+        <b>${imp.file?esc(imp.file):'파일 고르기'}</b>
+        <span class="tiny">${imp.file?'다른 파일을 올리려면 다시 누르세요':'xlsx · xls · csv 파일. PC는 끌어다 놓아도 돼요'}</span>
+      </label>
+      <div class="err-t ${imp.err&&imp.err!=='pay'?'on':''}">${esc(imp.err&&imp.err!=='pay'?imp.err:'')}</div>
     </div>
-    <button class="btn sub" data-act="parse">미리보기</button>
+    ${imp.grid?`<div class="field"><span class="lab">3. 칸이 맞는지 확인 <span class="tiny">(틀리면 바꿔주세요)</span></span><div class="maps">${colSel('date','날짜')}${colSel('merchant','가맹점')}${colSel('amount','금액')}</div></div>`:''}
   </div>
   <div class="card"><h2>카드사 엑셀 받는 곳</h2>
     <p class="tiny" style="margin-bottom:8px">로그인 → 이용내역 조회 → 엑셀 다운로드</p>
@@ -436,37 +449,77 @@ function viewImport(){
       <a class="chip sm plain" href="https://card.kbcard.com" target="_blank" rel="noopener">KB국민카드</a>
       <a class="chip sm plain" href="https://www.shinhancard.com" target="_blank" rel="noopener">신한카드</a>
       <a class="chip sm plain" href="https://www.samsungcard.com" target="_blank" rel="noopener">삼성카드</a>
-    </div><p class="tiny" style="margin-top:8px">토스 커플카드: 토스 앱 → 카드 → 이용내역</p>
+    </div><p class="tiny" style="margin-top:8px">토스 커플카드: 토스 앱 → 카드 → 이용내역<br>암호가 걸린 파일은 엑셀에서 연 뒤 암호 없이 다시 저장해서 올려주세요</p>
   </div></div>
-  <div>${imp.rows.length?`<div class="card"><h2>미리보기 <small>${sel}건 선택</small></h2>
+  <div>${imp.rows.length?`<div class="card"><h2>미리보기 <small>${sel}건 선택 · ${won(imp.rows.filter(r=>r.on).reduce((a,r)=>a+r.amount,0))}원</small></h2>
     <table class="prev"><tbody>${imp.rows.map((r,i)=>`<tr class="${r.dup?'dup':''}">
       <td><input type="checkbox" class="cb" data-ion="${i}" ${r.on?'checked':''} aria-label="저장할지 선택"></td>
-      <td><div style="font-weight:600">${esc(r.merchant)}</div><div class="tiny">${esc(r.date)}${r.dup?' · 이미 있는 내역':''}</div></td>
+      <td><div style="font-weight:600">${esc(r.merchant||'(가맹점 없음)')}</div><div class="tiny">${esc(r.date)}${r.dup?' · 이미 있는 내역':''}</div></td>
       <td><select class="g-${groupOf(r.cat)}" data-icat="${i}" aria-label="분류">${opts(r.cat)}</select></td>
       <td class="a num">${won(r.amount)}</td></tr>`).join('')}</tbody></table>
     <div style="margin-top:16px"><button class="btn" data-act="doImport" ${sel?'':'disabled'}>${sel}건 저장하기</button></div>
-  </div>`:`<div class="card">${emptyHtml('📋','붙여넣으면 여기에 미리 보여드려요','가맹점 이름으로 분류를 자동으로 골라둘게요. 틀린 건 바꿀 수 있어요','붙여넣기 칸으로','focusPaste')}</div>`}</div></div>`;
+  </div>`:`<div class="card">${imp.grid?emptyHtml('🤔','읽을 수 있는 줄이 없어요','왼쪽에서 날짜·가맹점·금액 칸을 다시 골라보세요','칸 다시 고르기','focusMap'):emptyHtml('📋','파일을 올리면 여기에 미리 보여드려요','가맹점 이름으로 분류를 자동으로 골라둘게요. 틀린 건 바꿀 수 있어요','파일 고르기','pickFile')}</div>`}</div></div>`;
 }
-function bindImport(){ const tb=$('#pasteBox'); if(tb&&imp.text) tb.value=imp.text; }
-function parsePaste(text){
-  const out=[];
-  for(const line of text.split(/\r?\n/)){
-    if(!line.trim()) continue;
-    const sep=line.includes('\t')?/\t/:/\s{2,}/.test(line)?/\s{2,}/:/,(?!\d{3}(?:\D|$))/;
-    const cells=line.split(sep).map(c=>c.trim().replace(/^"|"$/g,'')).filter(Boolean);
-    let date='',amount=NaN,merchant='';
-    for(const c of cells){ if(!date){const d=normDate(c); if(d){date=d;continue;}} }
-    const fmt=cells.filter(c=>/\d,\d{3}|원/.test(c)).map(toNum).filter(n=>!isNaN(n));
-    const plain=cells.filter(c=>!normDate(c)).map(toNum).filter(n=>!isNaN(n)&&Math.abs(n)>=10&&String(Math.abs(n)).length<=7);
-    if(fmt.length) amount=fmt[fmt.length-1]; else if(plain.length) amount=plain[plain.length-1];
-    const SKIP=/^(일시불|할부|승인|정상|취소|국내|해외|신용|체크|결제|매출|\d+개월)$/;
-    const texts=cells.filter(c=>!normDate(c)&&isNaN(toNum(c))&&!/^\d{1,2}:\d{2}/.test(c)&&!/\*{2,}/.test(c)&&!/^[\d\-]+$/.test(c)&&!SKIP.test(c));
-    merchant=texts.sort((a,b)=>b.length-a.length)[0]||'';
-    if(!date||isNaN(amount)) continue;
+function bindImport(){
+  const dz=$('#drop'); if(!dz) return;
+  ['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('over');}));
+  ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,()=>dz.classList.remove('over')));
+  dz.addEventListener('drop',e=>{e.preventDefault(); const f=e.dataTransfer.files[0]; if(f) readXls(f);});
+}
+async function loadXLSX(){
+  if(window.XLSX) return;
+  await new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';s.onload=ok;s.onerror=()=>no(new Error('엑셀 읽기 도구를 불러오지 못했어요. 인터넷 연결을 확인해 주세요'));document.head.appendChild(s);});
+}
+async function readXls(file){
+  if(!imp.pay){ imp.err='pay'; render(); return; }
+  imp.err=''; imp.file=file.name;
+  try{
+    await loadXLSX();
+    const buf=await file.arrayBuffer();
+    let wb;
+    try{ wb=XLSX.read(buf,{type:'array',cellDates:false}); }
+    catch(e){ throw new Error(/password|encrypt/i.test(e.message)?'암호가 걸린 파일이에요. 엑셀에서 암호 없이 다시 저장해서 올려주세요':'파일을 읽을 수 없어요. 엑셀(xlsx·xls)이나 csv 파일인지 확인해 주세요'); }
+    let best=null;
+    for(const n of wb.SheetNames){ const g=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:''}); if(!best||g.length>best.length) best=g; }
+    if(!best||!best.length) throw new Error('파일에 내용이 없어요');
+    imp.grid=best; detectCols(); buildRows();
+  }catch(e){ imp.err=e.message; imp.grid=null; imp.rows=[]; }
+  render();
+  if(imp.rows.length&&innerWidth<960) document.querySelector('.prev')?.closest('.card')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function cellDate(v){
+  if(v instanceof Date&&!isNaN(v)) return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
+  if(typeof v==='number'&&v>30000&&v<60000){ const d=new Date(Math.round((v-25569)*864e5)); return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`; }
+  return normDate(v);
+}
+function cellNum(v){ return typeof v==='number'?v:toNum(v); }
+function detectCols(){
+  const g=imp.grid, RX={date:/(이용|거래|승인|매출|결제)?\s*(일자|일시|날짜|년월일)|^이용일$|^거래일$|^승인일$/, merchant:/가맹점|이용처|사용처|상호|이용하신\s*곳|거래처|내용|적요/, amount:/(이용|승인|결제|청구|매출|거래)\s*금액|^금액/};
+  const BAD=/수수료|이자|포인트|할인|잔액|원금|외화|해외|적립|혜택|회차|개월|USD/;
+  imp.head=-1; imp.map={date:-1,merchant:-1,amount:-1};
+  for(let r=0;r<Math.min(g.length,40);r++){
+    const row=g[r].map(c=>String(c).replace(/\s+/g,' ').trim());
+    const d=row.findIndex(c=>RX.date.test(c)), a=row.findIndex(c=>RX.amount.test(c)&&!BAD.test(c));
+    if(d>=0&&a>=0){ imp.head=r; imp.map.date=d; imp.map.amount=a; imp.map.merchant=row.findIndex(c=>RX.merchant.test(c)&&!BAD.test(c)); break; }
+  }
+  const start=imp.head+1, sample=g.slice(start,start+40), ncol=Math.max(...g.slice(0,60).map(r=>r.length));
+  const score=f=>Array.from({length:ncol},(_,i)=>sample.filter(r=>f(r[i])).length);
+  const best=(arr,skip)=>{let bi=-1,bv=0;arr.forEach((v,i)=>{if(!skip.includes(i)&&v>bv){bv=v;bi=i;}});return bi;};
+  if(imp.map.date<0) imp.map.date=best(score(v=>!!cellDate(v)),[]);
+  if(imp.map.amount<0) imp.map.amount=best(score(v=>{const n=cellNum(v);return !isNaN(n)&&Math.abs(n)>=100&&Math.abs(n)<1e8;}),[imp.map.date]);
+  if(imp.map.merchant<0){ const lens=Array.from({length:ncol},(_,i)=>sample.reduce((a,r)=>a+(typeof r[i]==='string'&&!cellDate(r[i])&&isNaN(toNum(r[i]))?r[i].length:0),0)); imp.map.merchant=best(lens,[imp.map.date,imp.map.amount]); }
+}
+function buildRows(){
+  const {date:di,merchant:mi,amount:ai}=imp.map, out=[];
+  for(let r=imp.head+1;r<imp.grid.length;r++){
+    const row=imp.grid[r]; const date=cellDate(row[di]), amount=cellNum(row[ai]);
+    const merchant=String(mi>=0?row[mi]??'':'').replace(/\s+/g,' ').trim();
+    if(!date||isNaN(amount)||amount===0) continue;
+    if(/합계|소계|총\s*계|총이용/.test(merchant)) continue;
     const dup=liveTx().some(t=>t.date===date&&t.amount===amount&&(t.merchant||t.memo)===merchant);
     out.push({date,merchant,amount,cat:autoCat(merchant),on:!dup,dup});
   }
-  return out;
+  imp.rows=out;
 }
 
 /* ---------- 설정 ---------- */
@@ -595,7 +648,7 @@ document.addEventListener('click',e=>{
   if(d.kind){ readFormInputs(); form.kind=d.kind; form.cat=''; drawForm(); return; }
   if(d.fcatpick){ readFormInputs(); form.cat=d.fcatpick; drawForm(); return; }
   if(d.fpaypick){ readFormInputs(); form.pay=form.pay===d.fpaypick?'':d.fpaypick; drawForm(); return; }
-  if(d.ipay){ imp.pay=d.ipay; imp.text=$('#pasteBox')?.value||''; render(); return; }
+  if(d.ipay){ imp.pay=d.ipay; if(imp.err==='pay') imp.err=''; render(); return; }
   if(d.delpay){ state.settings.pays=state.settings.pays.filter(p=>p!==d.delpay); touchSettings(); render(); toast('지웠어요'); return; }
   if(d.delrule){ state.settings.rules.splice(Number(d.delrule),1); touchSettings(); render(); return; }
   if(d.delcat){
@@ -609,19 +662,12 @@ document.addEventListener('click',e=>{
     prevM:()=>{ui.month=shiftMonth(ui.month,-1);render();}, nextM:()=>{ui.month=shiftMonth(ui.month,1);render();},
     showUnc:()=>{ui.tab='list';ui.filterCat='__unc';render();},
     syncNow:()=>doSync(),
-    focusPaste:()=>$('#pasteBox')?.focus(),
-    parse:()=>{
-      const text=$('#pasteBox').value; imp.text=text;
-      if(!imp.pay){ $('#payErr').classList.add('on'); return; }
-      imp.rows=parsePaste(text);
-      if(!imp.rows.length){ $('#pasteErr').classList.add('on'); return; }
-      render();
-    },
+    pickFile:()=>$('#xlsFile')?.click(), focusMap:()=>document.querySelector('[data-imap]')?.focus(),
     doImport:()=>{
       const now=Date.now(); let n=0;
       imp.rows.filter(r=>r.on).forEach(r=>{ state.tx.push({id:uid(),date:r.date,cat:r.cat,amount:r.amount,pay:imp.pay,memo:'',merchant:r.merchant,updatedAt:now,deleted:false}); n++; });
       ui.month=imp.rows.find(r=>r.on)?.date.slice(0,7)||ui.month;
-      imp={rows:[],pay:imp.pay,text:''}; persist(); ui.tab='home'; render(); toast(`${n}건 저장했어요`);
+      imp={rows:[],pay:imp.pay,grid:null,head:-1,map:{date:-1,merchant:-1,amount:-1},file:'',err:''}; persist(); ui.tab='home'; render(); toast(`${n}건 저장했어요`);
     },
     saveSync:async()=>{
       const url=$('#syncUrl').value.trim(), key=$('#syncKey').value;
@@ -650,6 +696,8 @@ document.addEventListener('change',e=>{
   const t=e.target, d=t.dataset;
   if(d.ion!==undefined){ imp.rows[d.ion].on=t.checked; render(); return; }
   if(d.icat!==undefined){ imp.rows[d.icat].cat=t.value; render(); return; }
+  if(d.imap!==undefined){ imp.map[d.imap]=Number(t.value); buildRows(); render(); return; }
+  if(t.id==='xlsFile'&&t.files[0]){ readXls(t.files[0]); t.value=''; return; }
   if(d.budget!==undefined){ const c=catOf(d.budget); const n=toNum(t.value); c.budget=isNaN(n)?0:n; t.value=c.budget?won(c.budget):''; touchSettings(); toast('예산을 바꿨어요'); return; }
   if(t.id==='importFile'&&t.files[0]){
     const r=new FileReader(); r.onload=()=>{ try{ const d=JSON.parse(r.result); if(!d.settings||!Array.isArray(d.tx)) throw 0;
@@ -659,7 +707,7 @@ document.addEventListener('change',e=>{
       persist(); render(); toast('불러왔어요'); }catch(err){ toast('백업 파일을 읽을 수 없어요'); } }; r.readAsText(t.files[0]);
   }
 });
-document.addEventListener('input',e=>{ if(e.target.id==='pasteBox'){ imp.text=e.target.value; $('#pasteErr')?.classList.remove('on'); } if(e.target.id==='syncUrl'){ $('#urlErr').classList.remove('on'); e.target.classList.remove('err'); } });
+document.addEventListener('input',e=>{ if(e.target.id==='syncUrl'){ $('#urlErr').classList.remove('on'); e.target.classList.remove('err'); } });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&form) closeForm(); if(e.key==='Enter'&&form&&e.target.tagName==='INPUT') saveForm(); });
 $('#dim').onclick=closeForm; $('#fab').onclick=()=>openForm(null); $('#sideAdd').onclick=()=>openForm(null);
 

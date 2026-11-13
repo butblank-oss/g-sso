@@ -251,6 +251,12 @@ details.card summary{gap:8px}
   .stats{gap:6px}
   .stats div{padding:10px 8px}
 }
+.sw{position:relative;width:48px;height:28px;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw i{position:absolute;inset:0;border-radius:99px;background:var(--line);transition:background .2s;cursor:pointer}
+.sw i::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s var(--ease)}
+.sw input:checked+i{background:var(--blue)} .sw input:checked+i::after{transform:translateX(20px)}
+.sw input:focus-visible+i{outline:2px solid var(--blue);outline-offset:2px}
 .hide{display:none!important}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -341,6 +347,26 @@ function normDate(v){
   return '';
 }
 function toNum(v){const s=String(v||'').replace(/[,\s원₩]/g,''); return /^-?\d+(\.\d+)?$/.test(s)?Number(s):NaN}
+
+
+/* ---------- 월급 자동 기록 ---------- */
+function salaryConf(){ const S=state.settings; if(!S.salary) S.salary={on:true,day:10,since:monthKey(new Date())}; return S.salary; }
+function ensureSalary(){
+  const c=salaryConf(); if(!c.on) return false;
+  const amt=catOf('월급')?.budget||0; if(!amt) return false;
+  const now=new Date(), cur=monthKey(now); let mk=c.since, added=false;
+  while(mk<=cur){
+    const [y,m]=mk.split('-').map(Number), last=new Date(y,m,0).getDate(), day=Math.min(c.day,last);
+    const due=new Date(y,m-1,day);
+    const id='salary-'+mk;
+    if(now>=due && !state.tx.some(t=>t.id===id)){
+      state.tx.push({id,date:`${mk}-${String(day).padStart(2,'0')}`,cat:'월급',amount:amt,pay:'계좌이체',memo:'월급 (자동 기록)',merchant:'',updatedAt:Date.now(),deleted:false,auto:true});
+      added=true;
+    }
+    mk=shiftMonth(mk,1);
+  }
+  return added;
+}
 
 /* ---------- 아이콘 ---------- */
 const IC={
@@ -567,7 +593,7 @@ function buildRows(){
 /* ---------- 설정 ---------- */
 function viewSettings(){
   const S=state.settings;
-  const budgets=GROUPS.map(g=>`<div class="group-t">${g}</div>`+S.cats.filter(c=>c.group===g).map(c=>
+  const budgets=GROUPS.map(g=>`<div class="group-t">${g==='수입'?'수입 (예상 금액)':g}</div>`+S.cats.filter(c=>c.group===g).map(c=>
     `<div class="set-row"><span class="nm">${esc(c.name)}</span><input class="inp num" inputmode="numeric" data-budget="${esc(c.name)}" value="${c.budget?won(c.budget):''}" placeholder="0" aria-label="${esc(c.name)} 예산"><button class="del" data-delcat="${esc(c.name)}" aria-label="${esc(c.name)} 삭제">${IC.trash}</button></div>`).join('')).join('');
   const pays=S.pays.map(p=>`<div class="set-row"><span class="nm">${esc(p)}</span><button class="del" data-delpay="${esc(p)}" aria-label="${esc(p)} 삭제">${IC.trash}</button></div>`).join('');
   const rules=S.rules.map((r,i)=>`<div class="set-row"><span class="nm">${esc(r.kw)}</span><span class="chip sm g-${groupOf(r.cat)}">${esc(r.cat)}</span><button class="del" data-delrule="${i}" aria-label="규칙 삭제">${IC.trash}</button></div>`).join('');
@@ -580,6 +606,13 @@ function viewSettings(){
     <div class="field"><label for="syncKey">비밀번호 (스크립트에 적은 것)</label><input class="inp" id="syncKey" type="password" value="${esc(sync.key||'')}" autocomplete="off"></div>
     <div class="row-btns"><button class="btn" data-act="saveSync">연결하고 불러오기</button>${sync.url?`<button class="btn sub" data-act="unlinkSync" style="width:auto">연결 끊기</button>`:''}</div>
     ${ui.syncMsg?`<p class="tiny" style="margin-top:10px">${esc(ui.syncMsg)}</p>`:''}
+  </div>
+  <div class="card"><h2>월급 자동 기록 <small>${salaryConf().on?'켜짐':'꺼짐'}</small></h2>
+    <p class="tiny" style="margin-bottom:12px">매달 정한 날에 월급을 수입으로 자동 기록해요. 금액은 한 달 예산의 <b>월급</b> 값으로 들어가고, 달마다 다르면 홈이나 내역에서 눌러서 고치면 돼요.</p>
+    <div class="set-row"><span class="nm">자동 기록</span><label class="sw"><input type="checkbox" id="salOn" ${salaryConf().on?'checked':''}><i></i></label></div>
+    <div class="set-row"><span class="nm">월급날 (매달)</span><input class="inp num" id="salDay" inputmode="numeric" value="${salaryConf().day}" style="width:80px"><span class="muted">일</span></div>
+    <div class="set-row"><span class="nm">기본 금액</span><span class="num" style="font-weight:600">${won(catOf('월급')?.budget||0)}원</span></div>
+    ${!(catOf('월급')?.budget)?'<p class="tiny over-t" style="margin-top:8px">예산의 월급 칸이 비어 있어서 아직 기록되지 않아요</p>':''}
   </div>
   <details class="card"><summary>결제수단</summary>${pays}
     <div class="add-row"><input class="inp" id="newPay" placeholder="새 결제수단 이름"><button class="btn sm" data-act="addPay">추가</button></div></details>
@@ -657,6 +690,7 @@ function applyServer(d){
   if(!d) return;
   state.tx=Array.isArray(d.tx)?d.tx:state.tx;
   if(d.settings&&d.settings.cats) state.settings=d.settings;
+  if(ensureSalary()) scheduleSync();
   saveLocal();
 }
 async function doSync(){
@@ -740,7 +774,9 @@ document.addEventListener('change',e=>{
   if(d.icat!==undefined){ imp.rows[d.icat].cat=t.value; render(); return; }
   if(d.imap!==undefined){ imp.map[d.imap]=Number(t.value); buildRows(); render(); return; }
   if(t.id==='xlsFile'&&t.files[0]){ readXls(t.files[0]); t.value=''; return; }
-  if(d.budget!==undefined){ const c=catOf(d.budget); const n=toNum(t.value); c.budget=isNaN(n)?0:n; t.value=c.budget?won(c.budget):''; touchSettings(); toast('예산을 바꿨어요'); return; }
+  if(d.budget!==undefined){ const c=catOf(d.budget); const n=toNum(t.value); c.budget=isNaN(n)?0:n; t.value=c.budget?won(c.budget):''; touchSettings(); if(c.name==='월급'){ ensureSalary(); persist(); render(); toast('월급을 바꿨어요. 이번 달 월급도 기록됐어요'); } else toast('예산을 바꿨어요'); return; }
+  if(t.id==='salOn'){ salaryConf().on=t.checked; touchSettings(); if(t.checked) ensureSalary(); persist(); render(); toast(t.checked?'월급 자동 기록을 켰어요':'월급 자동 기록을 껐어요'); return; }
+  if(t.id==='salDay'){ const n=Math.min(31,Math.max(1,Math.round(toNum(t.value))||10)); salaryConf().day=n; touchSettings(); render(); toast(`매달 ${n}일에 기록할게요`); return; }
   if(t.id==='importFile'&&t.files[0]){
     const r=new FileReader(); r.onload=()=>{ try{ const d=JSON.parse(r.result); if(!d.settings||!Array.isArray(d.tx)) throw 0;
       if(!confirm(`백업의 내역 ${d.tx.filter(x=>!x.deleted).length}건을 지금 내역과 합칠까요?`)) return;
@@ -753,6 +789,7 @@ document.addEventListener('input',e=>{ if(e.target.id==='syncUrl'){ $('#urlErr')
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&form) closeForm(); if(e.key==='Enter'&&form&&e.target.tagName==='INPUT') saveForm(); });
 $('#dim').onclick=closeForm; $('#fab').onclick=()=>openForm(null); $('#sideAdd').onclick=()=>openForm(null);
 
+if(ensureSalary()) persist();
 render();
 if(sync.url){ (async()=>{ setSync('busy',''); try{ const d=await api({action:'save',data:state}); applyServer(d); setSync('ok','마지막 동기화 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})); }catch(e){ setSync('err','동기화 실패: '+e.message); } softRender(); })(); }
 </script>
